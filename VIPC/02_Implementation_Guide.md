@@ -25,8 +25,8 @@ This document is the engineering and business execution plan for building the **
 | **Integration** | MuleSoft Anypoint (or Salesforce Connect + custom APIs) | EHR, wearable, clearinghouse connections | See cost analysis Sec. 6 |
 | **AI/ML** | Salesforce Einstein + custom Python models (scikit-learn, XGBoost, PyTorch) | Risk stratification, NLP, anomaly detection | Einstein: $150/user/month (Agentforce Healthcare); custom models: self-hosted |
 | **Security** | Salesforce Shield (Platform Encryption + Event Monitoring) | HIPAA encryption, audit trails, PHI access monitoring | ~30% of SF license spend |
-| **Analytics** | Salesforce CRM Analytics (Tableau CRM) | Compliance dashboards, MIPS tracking, revenue analytics | Included in Health Cloud Enterprise |
-| **Database** | Salesforce platform (PostgreSQL-backed) + external data warehouse (BigQuery or Snowflake) for ML training | Operational data in SF; analytics/training data in warehouse | SF: included; warehouse: usage-based |
+| **Analytics** | Salesforce Reports & Dashboards (Phase 1); CRM Analytics (Phase 2+) | Compliance dashboards, MIPS tracking, revenue analytics | Reports/Dashboards: included; CRM Analytics: add-on ~$75--$150/user/month |
+| **Database** | Salesforce platform + external data warehouse (BigQuery or Snowflake) for ML training | Operational data in SF; analytics/training data in warehouse | SF: included; warehouse: usage-based |
 | **Hosting (custom models)** | Google Cloud Platform (GCP) Healthcare API or AWS HealthLake | HIPAA-eligible model serving, FHIR data store | GCP: ~$500--$2,000/month at pilot scale |
 | **DevOps** | GitHub (private repos) + GitHub Actions CI/CD | Source control, automated testing, deployment | GitHub Team: $4/user/month |
 | **Monitoring** | Salesforce Event Monitoring + Datadog (APM) | Application performance, error tracking | Datadog: ~$15/host/month |
@@ -45,9 +45,9 @@ For the $50K grant phase, we do NOT build the full architecture. We build a func
 |  |                           |  |                              |  |
 |  | - Patient records (360)   |  | - Risk stratification model |  |
 |  | - Care plan templates     |  |   (XGBoost on CMS PUF data) |  |
-|  | - Compliance task mgmt    |  | - Basic NLP for coding      |  |
-|  | - MIPS quality tracking   |  |   suggestions (spaCy +      |  |
-|  | - RPM data display        |  |   MedCAT)                   |  |
+|  | - Compliance task mgmt    |  | - FHIR data transforms      |  |
+|  | - MIPS quality tracking   |  |   (device -> Observation)   |  |
+|  | - RPM data display        |  |                              |  |
 |  | - Basic billing tracking  |  |                              |  |
 |  +------------+--------------+  +--------------+---------------+  |
 |               |                                |                  |
@@ -68,7 +68,7 @@ For the $50K grant phase, we do NOT build the full architecture. We build a func
 ```
 
 **Key MVP decisions:**
-- **No MuleSoft in Phase 1.** MuleSoft starts at ~$50K/year minimum -- that's our entire grant. Use Salesforce Connect, Named Credentials, and Apex REST callouts for Phase 1 integrations. MuleSoft comes in Phase 2 when revenue supports it.
+- **No MuleSoft in Phase 1.** MuleSoft starts at ~$80K/year minimum -- that's more than our entire grant. Use Salesforce Connect, Named Credentials, and Apex REST callouts for Phase 1 integrations. MuleSoft comes in Phase 2 when revenue supports it.
 - **Custom AI models hosted externally.** Salesforce Einstein for basic automation (lead scoring, flow triggers). Custom ML models (risk stratification, NLP) deployed as containerized Python services on GCP Cloud Run (HIPAA-eligible with BAA). Called from Salesforce via REST API.
 - **Shield encryption required from Day 1.** Non-negotiable for HIPAA. Budget for it.
 - **5 Salesforce users for pilot.** Enough for 2--3 clinic staff + VV admin/support users.
@@ -88,7 +88,7 @@ For the $50K grant phase, we do NOT build the full architecture. We build a func
 **Phase 1 pilot target:** Integrate with **1 EHR system** used by the pilot clinics. Prioritize eClinicalWorks or athenahealth -- both have the best FHIR R4 support and developer programs. If pilot clinics use **Azalea Health**, that's ideal since Azalea is purpose-built for RHCs and has native RHC billing support.
 
 **FHIR Implementation Guides to follow:**
-- US Core (v6.1.0) -- mandatory baseline for all US clinical data exchange
+- US Core (v8.0.1 / STU8) -- mandatory baseline for all US clinical data exchange (verify latest published version at time of build; v9.0.0 targeting USCDI v6 is in development)
 - SMART on FHIR (for app authorization)
 - Bulk FHIR (for panel-level data extraction)
 - DaVinci DEQM (Data Exchange for Quality Measures) -- for MIPS/eCQM reporting via FHIR
@@ -152,7 +152,7 @@ Patient device (cellular) -> Device vendor cloud (Smart Meter / Tenovi)
 | Feature | Salesforce Implementation | Custom Development | Phase |
 |---|---|---|---|
 | **Patient Risk Stratification** | Einstein prediction on Contact (Patient) object, or external model score written back to custom field `Risk_Score__c` | XGBoost model trained on CMS Public Use Files (Medicare claims, chronic conditions). Features: age, diagnosis codes (HCCs), utilization history, medication count, social determinants. Deployed on GCP Cloud Run, called via Apex REST callout | Phase 1 |
-| **RPM Data Ingestion** | Custom objects: `RPM_Reading__c` (master-detail to Contact). Fields: device type, measurement value, measurement date, device ID, transmission flag | Python integration service on GCP Cloud Run. Pulls from device manufacturer APIs (Omron, Withings, Dexcom), transforms to `RPM_Reading__c` records via Salesforce REST API | Phase 1 |
+| **RPM Data Ingestion** | Custom objects: `RPM_Reading__c` (master-detail to Contact). Fields: device type, measurement value, measurement date, device ID, transmission flag | Python integration service on GCP Cloud Run. Pulls from RPM aggregator API (Tenovi or Smart Meter), transforms to `RPM_Reading__c` records via Salesforce REST API | Phase 1 |
 | **Deterioration Alerts** | Flow triggered on `RPM_Reading__c` insert. Evaluates against threshold rules (e.g., systolic BP >180, SpO2 <90, weight gain >3 lbs/day). Creates Task for care team, sends push notification | Phase 1: rule-based thresholds. Phase 2: ML trend analysis model (sliding-window anomaly detection) | Phase 1 (rules), Phase 2 (ML) |
 | **Care Gap Detection** | Scheduled Apex job comparing patient records against USPSTF/CMS preventive care guidelines. Generates `Care_Gap__c` records for overdue screenings, immunizations, annual wellness visits | Guideline rules engine in Apex. Initial rule set: A1C testing (diabetics), mammography, colorectal screening, flu/pneumonia vaccines, annual wellness visit, depression screening (PHQ-9) | Phase 1 |
 | **Care Plan Management** | Health Cloud native Care Plan object with custom care plan templates for top chronic conditions (diabetes, hypertension, COPD, CHF, depression) | None -- Health Cloud configuration + custom templates | Phase 1 |
@@ -177,7 +177,7 @@ Patient device (cellular) -> Device vendor cloud (Smart Meter / Tenovi)
 | Feature | Salesforce Implementation | Custom Development | Phase |
 |---|---|---|---|
 | **RPM Billing Tracker** | Custom object: `Billing_Event__c` (master-detail to Contact). Automated tracking of device data transmission days per patient per month. Flow logic: when `RPM_Reading__c` count >= 16 in a calendar month, create billable event for CPT 99454 ($52.11). Clinician time tracking for 99457/99458 | Apex scheduled batch: nightly roll-up of RPM readings per patient, flagging billable thresholds | Phase 1 |
-| **CCM Time Tracking** | Custom object: `CCM_Activity__c` with fields for patient, clinician, activity type, duration (minutes), date. Flow logic: when cumulative minutes >= 20 in a calendar month, flag for CPT 99490 ($66.30). Track complex CCM threshold (60 min) for 99487 ($144.00) | Timer LWC component embedded in patient record for real-time time capture | Phase 1 |
+| **CCM Time Tracking** | Custom object: `CCM_Activity__c` with fields for patient, clinician, activity type, duration (minutes), date. Flow logic: when cumulative minutes >= 20 in a calendar month, flag for CPT 99490 ($66.30). Track complex CCM threshold (60 min) for 99487 (~$131.65) | Timer LWC component embedded in patient record for real-time time capture | Phase 1 |
 | **TCM Workflow** | Flow triggered on `Discharge_Notification__c` creation. Auto-creates tasks: (1) patient contact within 2 business days, (2) medication reconciliation, (3) face-to-face visit within 7 or 14 days. Tracks completion for CPT 99495 ($220) / 99496 ($298) | ADT (Admit/Discharge/Transfer) feed integration from hospital EHR (HL7v2 ADT message or FHIR Encounter) | Phase 2 |
 | **Coding Optimization** | NLP analysis of clinical notes to suggest missed diagnosis codes (HCCs) that affect risk adjustment and reimbursement | Python NLP pipeline: spaCy + MedCAT (medical concept annotation) + custom HCC mapping. Deployed on GCP Cloud Run | Phase 2 |
 | **Denial Prevention** | Rules engine checking claims against common denial reasons (missing auth, timely filing, documentation gaps) before submission | Apex rules engine with payer-specific rule sets; integration with clearinghouse pre-adjudication API | Phase 3 |
@@ -190,16 +190,18 @@ Patient device (cellular) -> Device vendor cloud (Smart Meter / Tenovi)
 | 99453 | RPM device setup (one-time) | $22.00 | Initial setup + 2 days monitoring |
 | 99454 | RPM device supply/data (monthly) | $52.11 | 16+ days of data transmission |
 | 99457 | RPM first 20 min interactive (monthly) | $51.77 | 20 min clinician time |
-| 99458 | RPM additional 20 min (up to 3x/month) | $52.00 | Each additional 20 min |
+| 99458 | RPM additional 20 min | ~$41.42 | Each additional 20 min beyond 99457 (no explicit cap per 2026 final rule; historically limited to 2 units, verify current CMS guidance) |
+| 99445 | RPM device supply/data (2--15 days/month) -- NEW 2026 | ~$52.11 | 2--15 days of data transmission (new lower threshold) |
+| 99470 | RPM first 10 min interactive -- NEW 2026 | ~$26.05 | 10--19 min clinician time (alternative to 99457 for shorter interactions) |
 | 99490 | CCM first 20 min (monthly) | $66.30 | 20 min staff time, 2+ chronic conditions |
 | 99439 | CCM additional 20 min (up to 2x/month) | $50.56 | Each additional 20 min |
-| 99487 | Complex CCM first 60 min (monthly) | $144.00 | 60 min staff time, complex needs |
+| 99487 | Complex CCM first 60 min (monthly) | ~$131.65 | 60 min staff time, complex needs |
 | 99489 | Complex CCM additional 30 min | $78.00 | Each additional 30 min |
 | 99495 | TCM moderate complexity | $220.00 | Contact within 2 days, visit within 14 days |
 | 99496 | TCM high complexity | $298.00 | Contact within 2 days, visit within 7 days |
 
 **Revenue unlock per clinic (conservative estimate):**
-Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence (200 patients eligible for CCM/RPM), 10% enrolled in RPM in Year 1 (80 patients), 15% enrolled in CCM (120 patients):
+Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence (200 patients eligible for CCM/RPM), 40% of eligible enrolled in RPM in Year 1 (80 patients), 60% of eligible enrolled in CCM (120 patients):
 
 | Revenue Stream | Patients | Monthly/Patient | Annual Revenue |
 |---|---|---|---|
@@ -314,7 +316,7 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 | MuleSoft (defer to Phase 2) | $0 | $0 |
 | **Salesforce Subtotal** | **$2,113** | **$8,450** |
 
-**Note on discounts:** Apply for the Salesforce ISV Partner Program (free to join). ISV partners get 2 free Enterprise Sales Cloud licenses and access to discounted development environments. Also explore the Salesforce Startup Program -- potential for significant discount or free first year. This could reduce Phase 1 Salesforce costs by 25--50%.
+**Note on discounts:** Apply for the Salesforce ISV Partner Program (free to join). ISV partners receive 2 free Enterprise Edition Sales Cloud licenses (NOT Health Cloud) and a Partner Business Org for app management. These do not directly offset Health Cloud production costs but provide a free development/testing environment. Explore negotiation for a short-term pilot agreement (4--6 months rather than 12-month annual commit). Also explore the Salesforce for Startups program -- discount availability varies and is not guaranteed. Budget assumes full list price; any discount is upside.
 
 **Phase 2 (10 users, full year):**
 
@@ -323,8 +325,8 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 | Health Cloud Enterprise (10 users x $325) | $3,250 | $39,000 |
 | Shield (~30%) | $975 | $11,700 |
 | Agentforce Healthcare (10 users x $150) | $1,500 | $18,000 |
-| MuleSoft Anypoint (Integration Starter) | ~$4,200 | ~$50,000 |
-| **Salesforce Subtotal** | **~$9,925** | **~$118,700** |
+| MuleSoft Anypoint (Integration Starter) | ~$6,700 | ~$80,000 (minimum; negotiate with Salesforce AE) |
+| **Salesforce Subtotal** | **~$12,425** | **~$148,700** |
 
 ### 6.2 Infrastructure Costs
 
@@ -353,9 +355,9 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 | Phase | Timeline | Cash Cost | In-Kind (Sweat Equity) | Total Value |
 |---|---|---|---|---|
 | **Phase 1 (MVP)** | Months 1--4 | $50,000 (VIPC grant) | ~$123,000 | ~$173,000 |
-| **Phase 2 (Full Product)** | Months 5--10 | ~$300,000--$400,000 | ~$150,000 | ~$450,000--$550,000 |
+| **Phase 2 (Full Product)** | Months 5--10 | ~$330,000--$430,000 | ~$150,000 | ~$480,000--$580,000 |
 | **Phase 3 (Scale)** | Months 11--18 | ~$600,000--$800,000 | ~$100,000 | ~$700,000--$900,000 |
-| **Total through Month 18** | | **~$950,000--$1,250,000** | **~$373,000** | **~$1,320,000--$1,620,000** |
+| **Total through Month 18** | | **~$980,000--$1,280,000** | **~$373,000** | **~$1,350,000--$1,650,000** |
 
 ---
 
@@ -366,7 +368,7 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 | Partner Type | Why Needed | Candidates | Status |
 |---|---|---|---|
 | **Pilot RHCs (2--3 clinics)** | Live environment to deploy, test, and demonstrate the platform. Must have Medicare patient panel, chronic disease population, and willingness to participate | Virginia RHCs -- identify through Virginia Rural Health Association or HRSA Health Center database. Target clinics using athenahealth or eCW for easier EHR integration | **Must secure by Month 1** |
-| **Salesforce Implementation Partner** | Optional but valuable -- can provide discounted licenses through partner program, development support, and AppExchange guidance | Small Salesforce Health Cloud partners: Silverline, Penrod, or local Virginia firms | Explore in Month 1 |
+| **Salesforce Implementation Partner** | Optional but valuable -- can provide discounted licenses through partner program, development support, and AppExchange guidance | Salesforce Health Cloud partners: independent consultants (Upwork/Toptal), Salesforce Trailblazer community referrals, or local Virginia firms | Explore in Month 1 |
 | **RPM Device Vendor / Aggregator** | Device supply for pilot patients, API access for data integration, and potential reseller arrangement. **Cellular connectivity required for rural patients** | **Tenovi** (device aggregation platform, 40+ FDA-cleared devices, cellular gateway, single API); **Smart Meter** (proprietary cellular devices, zero patient setup, multi-carrier SIM); **Prevounce/Pylo** (integrated device + platform line) | **Must secure by Month 2** |
 
 ### 7.2 Required Partners (Phase 2--3)
@@ -375,7 +377,7 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 |---|---|---|---|
 | **Clearinghouse** | Claims submission, eligibility verification, ERA/EOB processing | **Office Ally** (free for claim submission, 80K+ healthcare orgs, easiest setup) as Phase 2 first target. Availity (free for payer-sponsored eligibility checks) as secondary. Trizetto/Cognizant for advanced scrubbing in Phase 3 | Phase 2 |
 | **Billing Service / Coding Experts** | Validate coding optimization logic, provide training data for NLP model, clinical coding advisory | Local medical billing company or AAPC-certified coders | Phase 2 |
-| **HIPAA/Compliance Counsel** | BAA review, HIPAA policies, compliance attestation support | Heath care IT law firm (Virginia-based) | Phase 1 (BAA), Phase 2 (full) |
+| **HIPAA/Compliance Counsel** | BAA review, HIPAA policies, compliance attestation support | Healthcare IT law firm (Virginia-based) | Phase 1 (BAA), Phase 2 (full) |
 | **Salesforce ISV Partner** | Required for AppExchange distribution, managed package development | Self (VV registers as ISV partner -- free) | Phase 2 |
 
 ### 7.3 Strategic Relationships
@@ -399,9 +401,9 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 | **Encryption at Rest** | Salesforce Shield Platform Encryption (AES-256, tenant-specific keys). GCP default encryption (AES-256) with customer-managed keys (CMEK) for additional control |
 | **Encryption in Transit** | TLS 1.2+ (Salesforce enforces by default). All custom API calls use HTTPS only. FHIR endpoints authenticated via OAuth 2.0 / SMART on FHIR |
 | **Access Control** | Salesforce profiles + permission sets (RBAC). Principle of least privilege. Separate profiles for: clinic admin, provider, care coordinator, VV admin |
-| **Audit Logging** | Salesforce Shield Event Monitoring (login, API, data export, record access). Retain logs for 6 years (HIPAA requirement) |
+| **Audit Logging** | Salesforce Shield Event Monitoring (login, API, data export, record access) + Field Audit Trail for PHI fields. Shield retains real-time events for limited periods; configure Field Audit Trail for 10-year retention on PHI fields. Export event logs to external archive (GCP BigQuery or Cloud Storage) with 6-year retention to meet HIPAA documentation requirements (45 CFR 164.530(j)) |
 | **Workforce Training** | All VV and ACT team members with PHI access complete HIPAA training before pilot launch. Annual refresher. Document completion |
-| **Incident Response Plan** | Document and test PHI breach response procedure per HIPAA Breach Notification Rule (45 CFR 164.400--414). 60-day notification window to HHS if >500 individuals affected |
+| **Incident Response Plan** | Document and test PHI breach response procedure per HIPAA Breach Notification Rule (45 CFR 164.400--414). All breaches require individual notification within 60 days. Breaches affecting 500+ individuals also require HHS notification and prominent media notification within 60 days. Breaches <500 individuals: HHS notification via annual report within 60 days of calendar year end |
 | **Risk Assessment** | Complete HIPAA Security Rule risk assessment (NIST SP 800-66 methodology) before pilot launch. Document findings and remediation plan |
 
 ### 8.2 State and Federal Regulatory
@@ -410,7 +412,7 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 |---|---|
 | **Virginia Consumer Data Protection Act (VCDPA)** | Health data exemptions exist for HIPAA-covered data, but verify applicability for any non-PHI patient data |
 | **42 CFR Part 2** | If any pilot clinic treats substance use disorders, additional consent and segmentation requirements apply |
-| **FDA SaMD** | Risk stratification AI that informs clinical decisions may be subject to FDA Software as a Medical Device regulation. However, if positioned as "clinical decision support" that a provider reviews and acts on (not autonomous), likely qualifies for exemption under 21st Century Cures Act Section 3060(a). Document intended use carefully |
+| **FDA SaMD** | Risk stratification AI that informs clinical decisions may be subject to FDA Software as a Medical Device regulation. However, if positioned as "clinical decision support" meeting all four criteria under 21st Century Cures Act Section 3060(a) / FD&C Act 520(o) -- (1) does not acquire/process medical images or signals from signal acquisition systems, (2) displays/analyzes medical information, (3) intended to support HCP recommendations, (4) enables HCP to independently review the basis for recommendations -- it qualifies for non-device exemption. The January 2026 FDA CDS guidance update takes a more expansive reading of this exemption and broadens enforcement discretion. Document intended use statement and maintain a regulatory file demonstrating compliance with all four criteria |
 | **CMS Conditions of Participation** | Any software used for billing must not create false claims. Validate all auto-generated billing events against actual clinical documentation |
 
 ---
@@ -438,7 +440,7 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 | Clinics live on platform | 10+ |
 | ARR (Annual Recurring Revenue) | $240,000+ ($2K/month x 10 clinics) |
 | Net revenue unlock per clinic | $100,000+/year |
-| Clinic retention (churn) | <5% monthly |
+| Clinic retention (annual churn) | <10% |
 | NPS (staff satisfaction) | >50 |
 | MIPS penalty avoidance demonstrated | 100% of pilot clinics |
 
@@ -513,8 +515,9 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 | Post contract Salesforce developer job listing | Will + Jim | Week 1 | None |
 | Identify and contact 5--10 candidate pilot RHCs in Virginia | Jim + Mandy | Week 1--2 | None |
 | Execute HIPAA BAA with Salesforce | Will | Week 1 | SF provisioning |
-| Reach out to RPM device vendors (Omron, Withings) for partnership | Will + Jim | Week 2 | None |
+| Reach out to RPM device vendors (Tenovi, Smart Meter) for partnership; request API documentation and pilot pricing | Will + Jim | Week 2 | None |
 | Complete HIPAA Security Rule risk assessment | Will + Cari Ann | Week 2--3 | None |
+| Apply for EHR developer program access (athenahealth / eCW / Azalea Health based on pilot clinic EHR) | Will | Week 1--2 | Pilot clinic identified |
 | Select and onboard pilot clinic (first) | Jim | Week 3--4 | Clinic outreach |
 | Begin Sprint 1 development | Will + Contract Dev | Week 2 | SF environment ready |
 | Contact Virginia Rural Health Association for introductions | Jim + Mandy | Week 2 | None |

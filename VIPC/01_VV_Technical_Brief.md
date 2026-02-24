@@ -19,7 +19,7 @@ Virginia has **106 Rural Health Clinics** and 27 FQHCs (5,500+ RHCs nationally) 
 
 - **Compliance burden:** HIPAA, HRSA reporting, CMS quality metrics, FCC (telehealth/broadband) -- each with different reporting cadences, data formats, and penalty structures. A single RHC may face 15+ distinct regulatory obligations. Non-compliance triggers loss of Medicare/Medicaid reimbursement -- which is 60--80% of RHC revenue
 - **Care gaps:** Provider shortages (1 physician per 2,500+ patients in some Virginia counties), chronic disease prevalence 30--40% above urban averages, limited specialist access, no preventive care infrastructure. Patients present late-stage because there's no monitoring between annual visits
-- **Revenue leakage:** Undercoding, missed quality bonuses (MIPS/APM), denied claims from documentation gaps, and inability to capture RPM/CCM reimbursement codes that CMS now pays for. RHCs leave an estimated $50K--$150K per clinic per year on the table
+- **Revenue leakage:** Undercoding, missed quality bonuses (MIPS/APM), denied claims from documentation gaps, and inability to capture RPM/CCM reimbursement codes that CMS now pays for. RHCs leave an estimated $100K--$250K per clinic per year on the table in unrealized RPM, CCM, and quality bonus revenue
 
 **The key insight:** These three problems are interconnected. Compliance failures cause revenue loss. Care gaps drive costly ER utilization. Revenue shortfalls prevent investment in better care. No one is offering a unified platform that treats all three as a single system.
 
@@ -91,7 +91,7 @@ The 3C Platform is built on **Salesforce Health Cloud** as the backbone, which p
 |---|---|---|
 | **HIPAA Compliance Automation** | Continuous monitoring of access logs, PHI handling, security controls. Automated risk assessments per NIST SP 800-66 (HIPAA Security Rule mapping). Real-time alerts for policy violations | Salesforce Shield (Event Monitoring) + VV custom anomaly detection models + encrypted audit trail |
 | **HRSA UDS Report Generation** *(Phase 2)* | Automated data extraction from EHR, patient demographics, and clinical quality measures. Pre-populated UDS tables with validation checks before submission | EHR integration (Salesforce Connect/FHIR) + Salesforce Reports + VV data transformation engine |
-| **CMS Quality Dashboard** | Real-time tracking of MIPS quality measures, promoting interoperability scores, and improvement activities. Automated gap identification with provider-specific action items | Salesforce Health Cloud CRM Analytics + VV predictive models for quality measure trending |
+| **CMS Quality Dashboard** | Real-time tracking of MIPS quality measures, promoting interoperability scores, and improvement activities. Automated gap identification with provider-specific action items | Salesforce Health Cloud Reports & Dashboards (Phase 1; CRM Analytics Phase 2+) + VV predictive models for quality measure trending |
 | **Regulatory Change Engine** *(Phase 3)* | NLP-powered monitoring of Federal Register, CMS/HRSA policy updates, and state regulatory changes. Automated impact assessment and policy update workflows | VV NLP pipeline (fine-tuned language models) + Salesforce Flow for workflow triggers |
 
 **Talk-to for Michael Jarvis (HADRIUS investor):** "Michael, you know from HADRIUS how painful healthcare compliance is. We're taking that same compliance-automation concept and purpose-building it for the rural clinic market -- a segment HADRIUS and others don't specifically serve. Our AI engine doesn't just track compliance status; it's designed to predict where a clinic is at risk of falling out of compliance 60--90 days in advance based on trending data, staffing changes, and regulatory calendar analysis -- that's the capability we're building in Phase 1 and validating in the pilot. That's the difference between reactive penalty management and proactive compliance assurance."
@@ -129,7 +129,7 @@ The 3C Platform is built on **Salesforce Health Cloud** as the backbone, which p
 | **Automated Coding Optimization** *(Phase 2)* | NLP analysis of clinical documentation to identify under-coded encounters, missed HCC (Hierarchical Condition Category) codes, and documentation gaps that reduce reimbursement | VV NLP models (spaCy + MedCAT) fine-tuned on medical coding datasets; integrated as real-time suggestions during documentation workflow in Salesforce |
 | **RPM/CCM Billing Capture** | Automated tracking of RPM device data transmission days (16-day minimum for 99454), clinician interactive time (20-minute minimum for 99457/99458), CCM time tracking (20-minute minimum for 99490), and TCM follow-up windows. Auto-generates billable encounter records | VV time/event tracking engine integrated with Salesforce Health Cloud; automated claims preparation for clearinghouse submission |
 | **Denial Prevention** *(Phase 3)* | Pre-submission claims scrubbing against payer rules, prior authorization tracking, and documentation completeness verification. ML model trained on historical denial patterns to flag high-risk claims | VV predictive model + rules engine; Salesforce integration with clearinghouses (Office Ally Phase 2; Availity/Change Healthcare Phase 3) |
-| **MIPS/APM Dashboard** | Real-time tracking of Merit-based Incentive Payment System scores across all four categories (Quality, Cost, Promoting Interoperability, Improvement Activities). Projected payment adjustment modeling | Salesforce CRM Analytics + VV scoring models pulling from clinical, EHR, and claims data |
+| **MIPS/APM Dashboard** | Real-time tracking of Merit-based Incentive Payment System scores across all four categories (Quality, Cost, Promoting Interoperability, Improvement Activities). Projected payment adjustment modeling | Salesforce Reports & Dashboards (Phase 1; CRM Analytics Phase 2+) + VV scoring models pulling from clinical, EHR, and claims data |
 
 ---
 
@@ -217,6 +217,20 @@ This flywheel only works when all three modules share the same patient record, t
 
 ### "Why Salesforce and not a custom build?"
 "Three reasons. First, Salesforce Health Cloud is already HIPAA-compliant and FedRAMP-authorized -- that's millions in compliance infrastructure we don't have to build. Second, Salesforce's integration ecosystem gives us connectivity to every major EHR, clearinghouse, and health data system -- native FHIR support in Phase 1, MuleSoft connectors at scale. Third, it's a platform RHC staff can actually use -- Salesforce's UI is designed for non-technical users, which matters when your clinic administrator wears five hats. We focus our engineering on the AI layer and integrations that differentiate the product, not on rebuilding infrastructure that already exists."
+
+### HARD QUESTIONS -- ADVERSARIAL Q&A PREP
+
+### "What clinical validation have you completed?"
+"Phase 1 IS the clinical validation. We're training the risk stratification model on CMS public use files -- the same datasets used in peer-reviewed health services research. The model targets AUC-ROC above 0.75 with sensitivity above 80% for the highest-risk decile. During the 4-month pilot, we'll measure actual patient outcomes against model predictions -- that's the validation data set. This is a build-measure-learn approach, and the pilot outcomes report is what positions us for Series A."
+
+### "Why wouldn't an existing player (athenahealth, Waystar, etc.) just build this?"
+"Incumbents are optimized for their lane. athenahealth is an EHR -- they'll improve billing within their ecosystem but won't build a compliance module or purpose-build for RHC-specific workflows. Waystar is revenue cycle -- they have no clinical or compliance play. The competitors who come closest, like ThoroughCare, cover CCM/RPM billing but don't do compliance and don't have AI risk stratification. Building all three modules on a single data model requires a platform approach that no incumbent has incentive to pursue for a 5,500-clinic niche. That's our window."
+
+### "What happens if the pilot fails or clinics don't adopt?"
+"Our risk register accounts for this. If clinic staff adoption is low, we've built in Sprint 1 clinic involvement so the UI matches their actual workflow -- not what we think it should be. If RPM enrollment is low, we offer a device-included model so cost isn't a barrier for patients. If the EHR integration takes longer than expected, we fall back to manual CSV data import. The key mitigation is that we're targeting 2--3 pilot clinics, not one -- so a single clinic dropout doesn't kill the pilot."
+
+### "What's your FDA regulatory risk for the AI?"
+"We've analyzed this carefully. Our risk stratification tool qualifies for the clinical decision support exemption under the 21st Century Cures Act -- it meets all four criteria: it doesn't acquire signals from devices, it displays and analyzes medical information, it's intended to support provider recommendations, and the provider can independently review the basis for every score. We show the SHAP values -- the contributing factors -- for every risk score. The January 2026 FDA CDS guidance update actually broadens enforcement discretion in our favor. We document intended use from Day 1 and maintain a regulatory file."
 
 ---
 
