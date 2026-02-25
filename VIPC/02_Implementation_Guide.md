@@ -11,7 +11,7 @@
 
 This is the engineering and business execution plan for the **3C Platform** -- a unified solution for Rural Health Clinics (RHCs) addressing **Compliance**, **Care**, and **Collect Cash**. The platform is built on VV's proven stack: **n8n** (workflow automation), **PostgreSQL 16** (database), **Python/FastAPI** (API/ML), **React/Next.js** (frontend), and **Docker containers** on **Amazon GovCloud**. This is the same architecture VV deploys for defense clients, adapted for healthcare.
 
-**Key architecture decision:** No enterprise SaaS dependencies. VV owns every line of code. The $50K VIPC grant funds infrastructure and operations -- not licensing fees or contract developers. Will Nelson builds and maintains the system as VV's technical lead.
+**Key architecture decision:** No enterprise SaaS dependencies. **All intellectual property is owned by Authentic Consortium (ACT).** VV develops the platform under ACT's direction via a work-for-hire arrangement. The $50K VIPC grant funds infrastructure and operations -- not licensing fees or contract developers. Will Nelson builds and maintains the system as VV's technical lead. The modular architecture supports three service tiers (Essentials, Professional, Enterprise) so clinics pay only for the modules they need.
 
 **Scope:** $50K VIPC grant funds Phase 1 (MVP). Subsequent phases funded by pilot revenue and Series A.
 
@@ -132,6 +132,29 @@ Patient device (cellular) → Device vendor cloud (Smart Meter / Tenovi)
                            - Nightly: count transmission days per patient
                            - If ≥16 days: flag billable for CPT 99454
 ```
+
+### 2.5 Modular Service Tiers
+
+The 3C Platform is architected as **independent, composable modules** controlled by per-clinic configuration flags. This enables ACT to serve clinics of all sizes -- from a 200-patient solo-provider RHC that only needs compliance tracking, to a 2,000-patient FQHC running full RPM/CCM/billing programs.
+
+| Tier | Modules | Target Clinic | Price |
+|---|---|---|---|
+| **Essentials** | Compliance only (HIPAA tracker, risk assessment, CMS quality dashboard) | Small RHCs (<500 patients) | $500--$1,000/mo |
+| **Professional** | Compliance + Care (adds RPM integration, AI risk stratification, care gaps, deterioration alerts) | Mid-size RHCs (500--1,500 patients) | $1,500--$2,500/mo |
+| **Enterprise** | All 3C modules: Compliance + Care + Collect Cash (adds billing automation, MIPS optimization, coding, denial prevention) | Larger RHCs and FQHCs (1,500+ patients) | $2,500--$4,000/mo |
+
+**Technical implementation:**
+- `clinic_config` table stores module activation flags per clinic: `modules_enabled JSONB DEFAULT '["compliance"]'`
+- n8n workflow templates are grouped by module -- only active module workflows execute for each clinic
+- React dashboard conditionally renders module panels based on `modules_enabled`
+- Python/FastAPI services check module entitlement before processing (e.g., ML risk scoring only runs for clinics with "care" module active)
+- Upgrading a clinic tier = updating `modules_enabled` + deploying pre-built workflow templates. No custom code required
+
+**Why modular matters:**
+- **Lower barrier to entry:** Clinics can start with Essentials ($500/mo) and upgrade as they see ROI
+- **Broader addressable market:** Not every RHC can justify $2K+/month. The Essentials tier captures small clinics that competitors miss
+- **Net revenue expansion:** Clinics that start on Essentials naturally upgrade as they discover compliance savings and want care/billing capabilities (land-and-expand)
+- **Simpler sales motion:** "Start with what you need, add modules when you're ready"
 
 ---
 
@@ -268,30 +291,36 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 ### Phase 1: MVP (Months 1--4, $50K VIPC Grant)
 
-**Goal:** Working 3C Platform at 2--3 Virginia RHCs with core functionality in all three modules.
+**Goal:** Working 3C Platform at 2--3 Virginia RHCs. MVP delivers all three tiers so pilot clinics can validate the full modular model.
 
-| Month | Sprint | Deliverables |
-|---|---|---|
-| **Month 1** | Sprint 1--2 | **Foundation:** GovCloud environment provisioned (ECS Fargate, RDS PostgreSQL, S3, KMS). Database schema deployed with RLS. NGINX + TLS configured. React scaffold with auth (Keycloak or custom JWT). Patient import from pilot clinic (CSV or FHIR bulk). HIPAA compliance tracker live. Care plan templates for diabetes, hypertension, CHF |
-| **Month 2** | Sprint 3--4 | **Care + RPM:** EHR FHIR integration with pilot clinic EHR (bonFHIR node in n8n, Backend Services auth). RPM device integration (Python ingestion service + 1--2 device types via Tenovi/Smart Meter). RPM data flowing into PostgreSQL + displayed in dashboard. Alert rules configured. Care gap detection for top 6 preventive measures. Risk stratification model v1 trained and deployed (FastAPI on Fargate) |
-| **Month 3** | Sprint 5--6 | **Collect Cash + Quality:** RPM billing tracker live (n8n auto-flagging 99453/99454/99457 thresholds). CCM time tracking (React timer + n8n billing logic). MIPS quality measure dashboard (basic, 3--5 measures). Compliance dashboard. Patient consent capture workflow. End-to-end testing with pilot clinic staff |
-| **Month 4** | Sprint 7--8 | **Pilot Launch:** 2--3 Virginia RHCs live. Staff training completed. Baseline metrics captured. Bug fixes and UX refinements. Pilot outcomes report for Series A / next funding round |
+**MVP = Essentials tier fully functional + Professional tier core features + Enterprise tier billing basics.** This means every pilot clinic can demonstrate the full compliance→care→revenue flywheel, while the modular architecture proves that smaller clinics could subscribe to just Essentials.
+
+| Month | Sprint | Deliverables | Tier Unlocked |
+|---|---|---|---|
+| **Month 1** | Sprint 1--2 | **Foundation + Essentials Tier:** GovCloud environment provisioned (ECS Fargate, RDS PostgreSQL, S3, KMS). Database schema deployed with RLS + `clinic_config` module flags. NGINX + TLS configured. React scaffold with auth (Keycloak or custom JWT). Patient import from pilot clinic (CSV or FHIR bulk). **HIPAA compliance tracker live.** CMS quality dashboard (basic). Care plan templates for diabetes, hypertension, CHF. **File provisional patent application on unified 3C architecture** | **Essentials: shippable** |
+| **Month 2** | Sprint 3--4 | **Professional Tier:** EHR FHIR integration with pilot clinic EHR (bonFHIR node in n8n, Backend Services auth). RPM device integration (Python ingestion service + 1--2 device types via Tenovi/Smart Meter). RPM data flowing into PostgreSQL + displayed in dashboard. Alert rules configured. Care gap detection for top 6 preventive measures. Risk stratification model v1 trained and deployed (FastAPI on Fargate) | **Professional: shippable** |
+| **Month 3** | Sprint 5--6 | **Enterprise Tier:** RPM billing tracker live (n8n auto-flagging 99453/99454/99445/99457 thresholds). CCM time tracking (React timer + n8n billing logic). MIPS quality measure dashboard (basic, 3--5 measures). Patient consent capture workflow. End-to-end testing with pilot clinic staff | **Enterprise: shippable** |
+| **Month 4** | Sprint 7--8 | **Pilot Launch:** 2--3 Virginia RHCs live (at least 1 on each tier to validate tiering model). Staff training completed. Baseline metrics captured. Bug fixes and UX refinements. Pilot outcomes report for Series A / next funding round | **All 3 tiers validated** |
 
 ### Phase 2: Full Product (Months 5--10, funded by pilot revenue + seed)
 
-| Month | Deliverables |
-|---|---|
-| **5--6** | Additional EHR integrations (2--3 more systems via n8n + bonFHIR). n8n Enterprise upgrade for queue mode (scale to 10+ clinics). HRSA UDS report automation. Full MIPS dashboard (all 4 categories). Telehealth integration (Zoom/Doxy.me via n8n) |
-| **7--8** | NLP coding optimization (spaCy + MedCAT via FastAPI). TCM workflow (ADT feed integration). Denial prevention rules engine. ML deterioration prediction (replaces rule-based alerts). Additional RPM devices (3--5 types total) |
-| **9--10** | 10+ Virginia RHCs live. Regulatory change monitoring (Federal Register NLP). Automated clinic onboarding workflow. Performance benchmarking and case study publication |
+**Goal:** Harden all three tiers. Expand to 10+ clinics. Validate land-and-expand motion (clinics upgrading from Essentials → Professional → Enterprise).
+
+| Month | Deliverables | Tier Enhancement |
+|---|---|---|
+| **5--6** | Additional EHR integrations (2--3 more systems via n8n + bonFHIR). n8n Enterprise upgrade for queue mode (scale to 10+ clinics). HRSA UDS report automation. Full MIPS dashboard (all 4 categories). Telehealth integration (Zoom/Doxy.me via n8n). **Convert provisional patent(s) to full utility applications** | Professional + Enterprise enriched |
+| **7--8** | NLP coding optimization (spaCy + MedCAT via FastAPI). TCM workflow (ADT feed integration). Denial prevention rules engine. ML deterioration prediction (replaces rule-based alerts). Additional RPM devices (3--5 types total) | Enterprise features completed |
+| **9--10** | 10+ Virginia RHCs live (target mix: 3--4 Essentials, 4--5 Professional, 2--3 Enterprise). Regulatory change monitoring (Federal Register NLP). **Automated clinic onboarding workflow** (new clinic deploys from template in <1 day). Performance benchmarking and case study publication. Track tier upgrade conversions | All tiers production-hardened |
 
 ### Phase 3: Scale (Months 11--18, funded by Series A)
 
-| Month | Deliverables |
-|---|---|
-| **11--13** | Multi-region GovCloud deployment for HA/DR. Automated provisioning (new clinic live in hours). 50+ Virginia RHCs |
-| **14--16** | National expansion (WV, KY, TN, NC -- high RHC density). Advanced AI (population health analytics, predictive staffing). Clearinghouse direct integration (Availity, Change Healthcare) |
-| **17--18** | 100+ RHCs nationally. Series A close based on ARR + clinical outcomes. SOC 2 Type II audit. HITRUST certification pathway |
+**Goal:** National expansion. Automated onboarding. 100+ clinics across all tiers.
+
+| Month | Deliverables | Scale Target |
+|---|---|---|
+| **11--13** | Multi-region GovCloud deployment for HA/DR. Automated provisioning (new clinic live in hours, any tier). Self-service tier upgrade in dashboard. 50+ Virginia RHCs | 50+ clinics, majority on Professional/Enterprise |
+| **14--16** | National expansion (WV, KY, TN, NC -- high RHC density). Advanced AI (population health analytics, predictive staffing). Clearinghouse direct integration (Availity, Change Healthcare). **File additional patents as platform evolves** | Multi-state presence |
+| **17--18** | 100+ RHCs nationally. Series A close based on ARR + clinical outcomes. SOC 2 Type II audit. HITRUST certification pathway. Potential FQHC-specific tier (adds UDS reporting, HRSA compliance) | 100+ clinics, $1M+ ARR target |
 
 ---
 
@@ -403,7 +432,57 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 ---
 
-## 9. SUCCESS METRICS
+## 9. INTELLECTUAL PROPERTY STRATEGY
+
+### 9.1 IP Ownership
+
+**All 3C Platform intellectual property is owned by Authentic Consortium (ACT).** VV develops the platform under a work-for-hire arrangement with ACT. This structure ensures:
+
+- ACT controls all IP for licensing, fundraising, and exit purposes
+- VV operates as the contracted technical development arm
+- IP assignment is documented in the VV-ACT services agreement
+- All code, models, configurations, and documentation are ACT property
+
+### 9.2 IP Portfolio
+
+| IP Asset | Type | Protection Strategy | Timeline |
+|---|---|---|---|
+| **3C Platform source code** (Python, React, n8n configs, SQL) | Copyright / Trade Secret | Private GitHub repos under ACT org. Copyright registration. All contributors sign IP assignment | Day 1 |
+| **"Compliance → Care → Cash" unified architecture** | Utility Patent (provisional first) | Provisional patent covering the novel method of integrating regulatory compliance automation, AI clinical risk stratification, and automated CMS billing capture on a shared data model | Months 2--3 |
+| **Automated RPM/CCM billing threshold detection pipeline** | Utility Patent (provisional first) | Method patent covering automated tracking of device transmission days, clinician time, and mutual exclusivity logic (99445/99454, 99470/99457) to generate billable events | Months 2--3 |
+| **Configuration-driven multi-tenant healthcare deployment** | Utility Patent (provisional first) | Method patent covering the deployment of a standardized healthcare platform via feature flags and template workflows that adapt to each clinic's EHR, device mix, payer landscape, and module tier | Phase 2 |
+| **ML risk stratification models** | Trade Secret | Trained model weights, feature engineering pipeline, SHAP-based explainability configuration. Not published. Served only via API | Ongoing |
+| **n8n workflow template library** | Trade Secret | Proprietary clinic-specific workflow templates for EHR integration, RPM ingestion, billing automation, compliance tasks. Core competitive advantage | Ongoing |
+| **Clinical rules engine** | Trade Secret | Proprietary encoding of CMS/HIPAA/HRSA regulatory rules, MIPS scoring logic, care gap detection criteria | Ongoing |
+| **3C Platform trademark** | Trademark | File intent-to-use trademark application for "3C Platform" and ACT branding | Phase 1 |
+
+### 9.3 Patent Strategy
+
+**What makes the 3C Platform patentable:**
+- No existing system combines regulatory compliance automation, AI clinical risk stratification, and automated CMS billing capture for any healthcare segment on a unified data model
+- The specific method of using configuration-driven feature flags to deploy a standardized healthcare platform across clinics with different EHRs, device vendors, payer mixes, and regulatory requirements is novel
+- The automated billing pipeline that tracks device transmission days, clinician interaction time, and applies mutual exclusivity rules across 2026 CMS codes is a novel process
+
+**Patent timeline and budget:**
+- **Months 2--3:** File 1--2 provisional patent applications (establishes priority date, 12-month window to convert). Cost: ~$3,000--$5,000 from contingency (patent attorney + USPTO fees)
+- **Months 12--14:** Convert provisionals to full utility patent applications before 12-month deadline. Cost: ~$8,000--$15,000 (Phase 2 budget)
+- **Ongoing:** Trade secret protections (NDAs with all team members, contractors, and pilot clinic staff who access proprietary systems)
+
+### 9.4 Open-Source vs. Proprietary Boundary
+
+| Layer | Open Source (Free) | Proprietary (ACT IP) |
+|---|---|---|
+| **Infrastructure** | n8n Community Edition, PostgreSQL, React, FastAPI, NGINX, Docker | -- |
+| **Integration** | bonFHIR (Apache 2.0), FHIR R4 standard | Specific workflow templates, EHR configuration logic, data mapping rules |
+| **Clinical Logic** | CMS published billing rules, USPSTF guidelines, MIPS methodology | Risk model training pipeline, feature engineering, SHAP configuration, care gap detection algorithms |
+| **Business Logic** | -- | Module tiering system, clinic configuration engine, billing optimization pipeline, compliance scoring |
+| **Data** | CMS Public Use Files (public) | Trained model weights, clinic-specific configurations, proprietary analytics |
+
+**The moat is not the tools -- it's the specific clinical, regulatory, and billing logic encoded into the platform.** Anyone can deploy n8n and PostgreSQL. Nobody else has built the 3C clinical workflow library, the automated billing pipeline, or the compliance automation rules for RHCs.
+
+---
+
+## 10. SUCCESS METRICS
 
 ### 9.1 Phase 1 KPIs (Month 4 Report)
 
@@ -447,10 +526,12 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 **Competitive moat:**
 1. **Unified platform** -- no competitor offers compliance + care + revenue on one platform
-2. **RHC-specific** -- purpose-built for rural clinic workflows, not a hospital product scaled down
-3. **93--95% gross margins** -- custom stack eliminates enterprise licensing costs
-4. **VV defense pedigree** -- GovCloud infrastructure, security-first architecture, classified deployment experience
-5. **Virginia-first** -- local relationships, VIPC backing, state policy alignment
+2. **IP-protected** -- provisional patent on unified architecture; all IP owned by ACT; trade secrets in clinical logic, ML models, and workflow templates
+3. **Modular and scalable** -- three tiers serve clinics from 200 to 2,000+ patients; same codebase, configuration-driven
+4. **93--95% gross margins** -- custom stack eliminates enterprise licensing costs
+5. **RHC-specific** -- purpose-built for rural clinic workflows, not a hospital product scaled down
+6. **VV defense pedigree** -- GovCloud infrastructure, security-first architecture, classified deployment experience
+7. **Virginia-first** -- local relationships, VIPC backing, state policy alignment
 
 **Pricing:** $500--$4,000/month per clinic (3 tiers). At the $2,000/month entry tier, platform unlocks $195K--$267K/year in new revenue -- **8--11x return on subscription cost.**
 
@@ -490,6 +571,8 @@ audit_trail          -- application-level PHI access log (who, what, when)
 | Select and onboard first pilot clinic | Jim | Week 3--4 | Clinic outreach |
 | Begin Sprint 1 development (database schema, React scaffold, auth) | Will | Week 1 | GovCloud ready |
 | Contact Virginia Rural Health Association for introductions | Jim + Mandy | Week 2 | None |
+| Engage patent attorney for provisional patent application | Jim + Will | Week 4--6 | Architecture documented |
+| Execute VV-ACT work-for-hire / IP assignment agreement | Jim + Will | Week 1 | None |
 
 ---
 

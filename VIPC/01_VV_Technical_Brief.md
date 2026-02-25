@@ -9,7 +9,7 @@
 
 ## EXECUTIVE SUMMARY
 
-Authentic Consortium (ACT) is presenting the **3C Platform** -- a purpose-built solution for rural health clinics (RHCs) that solves three compounding crises: **Compliance**, **Care**, and **Collect Cash** (cost/revenue). Veteran Vectors (VV) designs and builds the platform using the same proven stack VV deploys for defense clients: **n8n** (workflow automation), **PostgreSQL** (database), and **Docker containers** on **Amazon GovCloud** (FedRAMP High, HIPAA-eligible). The platform is designed as a turnkey system deployable to any RHC, then customizable per clinic's EHR, device mix, payer landscape, and workflows. VV's technical lead builds and maintains the system -- no enterprise licensing, no per-seat fees, no vendor lock-in.
+Authentic Consortium (ACT) is presenting the **3C Platform** -- a purpose-built solution for rural health clinics (RHCs) that solves three compounding crises: **Compliance**, **Care**, and **Collect Cash** (cost/revenue). Veteran Vectors (VV) designs and builds the platform using the same proven stack VV deploys for defense clients: **n8n** (workflow automation), **PostgreSQL** (database), and **Docker containers** on **Amazon GovCloud** (FedRAMP High, HIPAA-eligible). The platform is designed as a turnkey system deployable to any RHC, then customizable per clinic's EHR, device mix, payer landscape, and workflows. **All intellectual property is owned by Authentic Consortium (ACT).** VV builds and maintains the system under ACT's direction -- no enterprise licensing, no per-seat fees, no vendor lock-in. The modular architecture allows clinics to subscribe to only the modules they need, scaling from a single-module Essentials tier to a full-platform Enterprise tier.
 
 ---
 
@@ -96,6 +96,25 @@ Each clinic deployment starts from a **base configuration** that works immediate
 
 **Onboarding a new clinic:** Clone base n8n workflow templates, configure EHR credentials via Named Credentials, set up device vendor API connection, customize alert thresholds, train staff on dashboard. Target: **clinic live in 2 weeks** after initial onboarding meeting.
 
+### 2.4 Modular Service Tiers -- Adapt to Any Clinic Size
+
+Not every clinic needs every module. The 3C Platform is architected as **independent, composable modules** activated per clinic via configuration flags -- not separate codebases:
+
+| Tier | Modules Included | Target Clinic | Price Range |
+|---|---|---|---|
+| **Essentials** | Compliance Module only (HIPAA tracker, risk assessment, CMS quality dashboard) | Small RHCs (<500 patients) needing compliance automation first | $500--$1,000/month |
+| **Professional** | Compliance + Care (adds RPM device integration, AI risk stratification, care gap detection, deterioration alerts) | Mid-size RHCs (500--1,500 patients) ready for RPM/CCM programs | $1,500--$2,500/month |
+| **Enterprise** | All 3 modules: Compliance + Care + Collect Cash (adds RPM/CCM billing automation, MIPS optimization, coding optimization, denial prevention) | Larger RHCs and FQHCs (1,500+ patients) maximizing revenue capture | $2,500--$4,000/month |
+
+**How modularity works technically:**
+- Each module is a set of n8n workflow templates, Python services, and React dashboard components
+- A `clinic_config` table in PostgreSQL stores which modules are active per clinic (`modules_enabled: ['compliance', 'care', 'billing']`)
+- Feature flags control which workflows execute and which dashboard panels render
+- Upgrading a clinic from Essentials to Professional means flipping a flag and deploying pre-built workflow templates -- not writing new code
+- This is the same configuration-driven deployment pattern VV uses for defense clients where different tiers get different capabilities
+
+**Why this matters for scalability:** A 200-patient RHC that only needs HIPAA tracking pays $500/month. A 2,000-patient FQHC running full RPM/CCM programs pays $4,000/month. Same platform, same codebase, different configuration. This lets ACT serve the full spectrum of rural healthcare facilities without maintaining multiple products.
+
 ---
 
 ## 3. VV'S TECHNICAL ROLE -- MODULE BY MODULE
@@ -180,6 +199,26 @@ Competitors sell point solutions:
 
 **The 3C Platform unifies all three on a single data model.** Compliance data feeds care decisions. Care activities generate revenue. Revenue funds better care. This flywheel only works when all three modules share the same patient record, analytics engine, and workflow platform.
 
+### 4.4 Intellectual Property Strategy
+
+**All 3C Platform IP is owned by Authentic Consortium (ACT).** Veteran Vectors (VV) develops the platform under a work-for-hire arrangement with ACT. This means:
+
+| IP Asset | Type | Owner | Protection |
+|---|---|---|---|
+| **3C Platform software** (all source code, configurations, templates) | Copyright / Trade Secret | **ACT** | Private GitHub repos; copyright registration; work-for-hire agreement with VV |
+| **"Compliance → Care → Cash" unified data model** | Patent (provisional) | **ACT** | Provisional patent application targeting Month 2--3 |
+| **AI risk stratification + billing optimization pipeline** | Patent (provisional) | **ACT** | Novel combination of clinical risk scoring with automated CMS billing threshold detection |
+| **n8n workflow template library** (EHR integration, RPM ingestion, billing automation) | Trade Secret | **ACT** | Proprietary clinic-specific workflow configurations are core competitive advantage |
+| **ML models** (risk stratification, deterioration prediction, coding optimization) | Trade Secret | **ACT** | Trained model weights, feature engineering, SHAP-based explainability pipeline |
+| **Clinical rules engine** (care gap detection, MIPS scoring, regulatory compliance logic) | Trade Secret | **ACT** | Proprietary encoding of CMS/HIPAA/HRSA rules into automated workflows |
+
+**What is patentable:**
+1. **The unified compliance-care-revenue platform architecture** -- the novel combination of regulatory compliance automation, AI-driven clinical risk stratification, and automated CMS billing capture on a single shared data model where each module's outputs feed the other modules. No existing system combines all three for any healthcare segment
+2. **The automated RPM/CCM billing threshold detection and revenue optimization pipeline** -- the specific method of ingesting device data, tracking transmission days and clinician time against CMS billing rules, and auto-generating billable events with mutual exclusivity logic (99445 vs 99454, 99470 vs 99457)
+3. **The configuration-driven multi-tenant clinic deployment model** -- the method of deploying a standardized healthcare platform via feature flags and template workflows that adapt to each clinic's EHR, device mix, payer landscape, and regulatory requirements without custom code
+
+**Patent timeline:** File provisional patent application(s) during Phase 1 (Months 2--3) to establish priority date. Convert to full utility patent application within 12 months. Budget: ~$3,000--$5,000 from contingency for provisional filing (patent attorney + USPTO fees).
+
 ---
 
 ## 5. MARKET OPPORTUNITY -- VIRGINIA FIRST, THEN NATIONAL
@@ -187,7 +226,7 @@ Competitors sell point solutions:
 | Metric | Virginia | National |
 |---|---|---|
 | Rural Health Clinics (+ FQHCs) | 106 RHCs + 27 FQHCs | 5,500+ RHCs |
-| Est. SaaS Revenue per Clinic | $2,000--$4,000/month | $2,000--$4,000/month |
+| Est. SaaS Revenue per Clinic (3 tiers) | $500--$4,000/month | $500--$4,000/month |
 | Virginia TAM (133 clinics) | $3.2M--$6.4M/year | -- |
 | National TAM | -- | $132M--$264M/year |
 | Revenue Unlock per Clinic | $195K--$267K/year | -- |
@@ -198,9 +237,9 @@ Competitors sell point solutions:
 
 | Phase | Timeline | Deliverables |
 |---|---|---|
-| **Phase 1: MVP** *(VIPC Grant)* | Months 1--4 | 3C Platform on GovCloud (n8n + PostgreSQL + React + FastAPI); HIPAA compliance tracker; EHR FHIR integration with 1 pilot EHR; AI risk stratification v1; RPM integration (1--2 device types); RPM/CCM billing tracker; 2--3 Virginia RHCs live |
-| **Phase 2: Full Product** | Months 5--10 | Additional EHR integrations (2--3 systems); NLP coding optimization; telehealth integration; ML deterioration prediction; HRSA UDS automation; 10+ Virginia RHCs |
-| **Phase 3: Scale** | Months 11--18 | Multi-region GovCloud; automated clinic onboarding; 50+ Virginia RHCs; national expansion (WV, KY, TN, NC); Series A based on ARR and outcomes data |
+| **Phase 1: MVP** *(VIPC Grant)* | Months 1--4 | All 3 service tiers shippable: Essentials (compliance), Professional (+ care/RPM), Enterprise (+ billing). Provisional patent filed. 2--3 Virginia RHCs live across tiers |
+| **Phase 2: Full Product** | Months 5--10 | Tiers hardened. Additional EHR integrations. NLP coding, telehealth, denial prevention. 10+ Virginia RHCs. Land-and-expand (tier upgrades tracked). Patent converted to utility |
+| **Phase 3: Scale** | Months 11--18 | Multi-region GovCloud. Automated onboarding (<1 day any tier). 50+ VA → national (WV, KY, TN, NC). Series A based on ARR, outcomes, patent portfolio |
 
 **$50K VIPC Grant Allocation:**
 
@@ -253,6 +292,9 @@ Competitors sell point solutions:
 ### "What happens if the pilot fails?"
 "We target 2--3 pilot clinics, not one -- a single dropout doesn't kill it. If staff adoption is low, we involve clinic staff in Sprint 1 design so the UI matches their workflow. If RPM enrollment is low, we provide devices at no cost to patients. If EHR integration takes longer than expected, we fall back to CSV import. And with $34K in contingency, we have budget to pivot."
 
+### "Who owns the IP? Is this patentable?"
+"All intellectual property is owned by Authentic Consortium. VV develops the platform under a work-for-hire arrangement with ACT. We've identified three patentable innovations: the unified compliance-care-revenue platform architecture, the automated RPM/CCM billing threshold detection pipeline, and the configuration-driven multi-tenant clinic deployment model. We plan to file a provisional patent in Months 2--3 to establish our priority date, funded from the contingency budget. The underlying open-source tools are free to use -- what's proprietary is our specific combination, our clinical logic, our workflow templates, and our trained ML models. That's the IP."
+
 ### "What's your FDA regulatory risk?"
 "Our risk stratification qualifies for the clinical decision support exemption under the 21st Century Cures Act -- all four criteria: doesn't acquire device signals, displays medical information, supports provider recommendations, and the provider can independently review the basis for every score via SHAP values. The January 2026 FDA CDS guidance update broadens enforcement discretion in our favor."
 
@@ -261,8 +303,8 @@ Competitors sell point solutions:
 ## 8. KNOW YOUR AUDIENCE
 
 ### Jennifer O'Daniel (VVP Lead)
-- **Cares about:** Virginia economic impact, job creation, grant ROI, scalability
-- **Hit:** "The $50K grant funds 2--3 Virginia RHC pilots over 4 months. Combined project value is ~$194K -- $50K from VIPC plus ~$144K in sweat equity. Because we built on open-source infrastructure, $34K of the grant is contingency. Pilot data positions ACT for a seed or Series A raise by Month 10, enabling ACT to hire Virginia-based technical and implementation staff to support statewide rollout."
+- **Cares about:** Virginia economic impact, job creation, grant ROI, scalability, IP creation
+- **Hit:** "The $50K grant funds 2--3 Virginia RHC pilots over 4 months. Combined project value is ~$194K -- $50K from VIPC plus ~$144K in sweat equity. All IP is owned by ACT, a Virginia entity -- we're filing a provisional patent on the unified platform architecture during Phase 1. Because we built on open-source infrastructure, $34K of the grant is contingency. Pilot data positions ACT for a seed or Series A raise by Month 10, enabling ACT to hire Virginia-based technical and implementation staff to support statewide rollout. The modular tiering means we can serve every rural clinic in Virginia, from the smallest 200-patient RHC to the largest FQHC."
 
 ### Michael Jarvis (Investor -- HADRIUS/Compliance + OHM/Wearables)
 - **Cares about:** Compliance tech market, wearables/preventive health, investment thesis validation
