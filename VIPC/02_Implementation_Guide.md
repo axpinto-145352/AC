@@ -11,7 +11,7 @@
 
 This is the engineering and business execution plan for the **3C Platform** -- a unified solution for Rural Health Clinics (RHCs) addressing **Compliance**, **Care**, and **Collect Cash**. The platform is built on VV's proven stack: **n8n** (workflow automation), **PostgreSQL 16** (database), **Python/FastAPI** (API/ML), **React/Next.js** (frontend), and **Docker containers** on **Amazon GovCloud**. This is the same architecture VV deploys for defense clients, adapted for healthcare.
 
-**Key architecture decision:** No enterprise SaaS dependencies. **All intellectual property is owned by Authentic Consortium (ACT).** VV develops the platform under ACT's direction via a work-for-hire arrangement. The $50K VIPC grant funds infrastructure and operations -- not licensing fees or contract developers. Will Nelson builds and maintains the system as VV's technical lead. The modular architecture supports three service tiers (Essentials, Professional, Enterprise) so clinics pay only for the modules they need.
+**Key architecture decision:** No enterprise SaaS dependencies. **All intellectual property is owned by Authentic Consortium (ACT).** VV develops the platform under ACT's direction via a work-for-hire arrangement. The $50K VIPC grant funds infrastructure and operations -- not licensing fees or contract developers. VV's technical lead builds and maintains the system. The modular architecture supports three service tiers (Essentials, Professional, Enterprise) so clinics pay only for the modules they need.
 
 **Scope:** $50K VIPC grant funds Phase 1 (MVP). Subsequent phases funded by pilot revenue and Series A.
 
@@ -330,8 +330,8 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 | Role | Who | Commitment | Cost |
 |---|---|---|---|
-| **Technical Lead / Full-Stack Developer** | Will Nelson (VV) | 40 hrs/week | Sweat equity |
-| **ML Engineering** | Will Nelson (VV) | Included above | Sweat equity |
+| **Technical Lead / Full-Stack Developer** | VV Technical Lead | 40 hrs/week | Sweat equity |
+| **ML Engineering** | VV Technical Lead | Included above | Sweat equity |
 | **Clinical Advisor / SME** | Cari Ann (ACT) + pilot clinic provider | 5 hrs/week | ACT sweat equity |
 | **Project Manager / Business Development** | Jim Pfautz (ACT CEO) | 10 hrs/week | ACT sweat equity |
 | **Compliance / Preventive Health** | Jessica (ACT) | 5 hrs/week | ACT sweat equity |
@@ -349,14 +349,14 @@ audit_trail          -- application-level PHI access log (who, what, when)
 | Domain, SSL (ACM), email (SES), monitoring | $1,000 | Annual domain + minimal SES + CloudWatch |
 | **Contingency / additional pilots** | **$34,000** | 68% of grant available for expansion or unexpected costs |
 | **VIPC Grant Total** | **$50,000** | |
-| Will (Technical Lead, 640 hrs @ $150/hr) | -- | ~$96,000 in-kind |
+| VV Technical Lead (640 hrs @ $150/hr) | -- | ~$96,000 in-kind |
 | Cari Ann (Clinical Advisory, 80 hrs @ $150/hr) | -- | ~$12,000 in-kind |
 | Jim (Project Management, 160 hrs @ $150/hr) | -- | ~$24,000 in-kind |
 | Jessica (Compliance/Health, 80 hrs @ $150/hr) | -- | ~$12,000 in-kind |
 | **Total In-Kind** | -- | **~$144,000** |
 | **Total Project Value (Phase 1)** | **$50,000 cash + ~$144,000 in-kind = ~$194,000** |
 
-**Why 68% contingency?** Will builds the platform -- no contract developer cost ($25K--$30K saved). No enterprise licensing ($8,450+ saved). The technology stack is free. The $50K funds operations and infrastructure. The large contingency gives ACT optionality: add pilot clinics, hire specialized help if needed, or absorb EHR integration surprises.
+**Why 68% contingency?** VV's technical lead builds the platform -- no contract developer cost ($25K--$30K saved). No enterprise licensing ($8,450+ saved). The technology stack is free. The $50K funds operations and infrastructure. The large contingency gives ACT optionality: add pilot clinics, hire specialized help if needed, or absorb EHR integration surprises.
 
 ### 6.3 Infrastructure Costs at Scale
 
@@ -560,19 +560,19 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 | Action | Owner | Deadline | Dependency |
 |---|---|---|---|
-| Provision AWS GovCloud environment (ECS, RDS, S3, KMS) | Will | Week 1 | None |
-| Execute AWS GovCloud BAA | Will | Week 1 | None |
-| Deploy n8n + PostgreSQL + NGINX containers on Fargate | Will | Week 1 | GovCloud provisioned |
-| Apply for EHR developer program (eCW / athena / Azalea) | Will | Week 1 | None |
+| Provision AWS GovCloud environment (ECS, RDS, S3, KMS) | VV Tech Lead | Week 1 | None |
+| Execute AWS GovCloud BAA | VV Tech Lead | Week 1 | None |
+| Deploy n8n + PostgreSQL + NGINX containers on Fargate | VV Tech Lead | Week 1 | GovCloud provisioned |
+| Apply for EHR developer program (eCW / athena / Azalea) | VV Tech Lead | Week 1 | None |
 | Identify and contact 5--10 candidate pilot RHCs | Jim + Mandy | Week 1--2 | None |
-| Engage HIPAA compliance counsel | Will + Cari Ann | Week 1 | None |
-| Complete HIPAA Security Rule risk assessment | Will + Cari Ann | Week 2--3 | None |
-| Reach out to RPM device vendors (Tenovi, Smart Meter) -- API docs + pilot pricing | Will + Jim | Week 2 | None |
+| Engage HIPAA compliance counsel | VV Tech Lead + Cari Ann | Week 1 | None |
+| Complete HIPAA Security Rule risk assessment | VV Tech Lead + Cari Ann | Week 2--3 | None |
+| Reach out to RPM device vendors (Tenovi, Smart Meter) -- API docs + pilot pricing | VV Tech Lead + Jim | Week 2 | None |
 | Select and onboard first pilot clinic | Jim | Week 3--4 | Clinic outreach |
-| Begin Sprint 1 development (database schema, React scaffold, auth) | Will | Week 1 | GovCloud ready |
+| Begin Sprint 1 development (database schema, React scaffold, auth) | VV Tech Lead | Week 1 | GovCloud ready |
 | Contact Virginia Rural Health Association for introductions | Jim + Mandy | Week 2 | None |
-| Engage patent attorney for provisional patent application | Jim + Will | Week 4--6 | Architecture documented |
-| Execute VV-ACT work-for-hire / IP assignment agreement | Jim + Will | Week 1 | None |
+| Engage patent attorney for provisional patent application | Jim + VV Tech Lead | Week 4--6 | Architecture documented |
+| Execute VV-ACT work-for-hire / IP assignment agreement | Jim + VV Tech Lead | Week 1 | None |
 
 ---
 
