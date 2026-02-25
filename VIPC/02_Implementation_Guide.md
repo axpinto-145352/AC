@@ -234,6 +234,103 @@ Assume 800 Medicare patients, 25% chronic disease prevalence (200 eligible), 40%
 | MIPS penalty avoidance (-9% on Medicare) | -- | -- | $36,000--$72,000 |
 | **Total new annual revenue per clinic** | | | **$195,000--$267,000** |
 
+### 3.4 CMS Reimbursement Route: Client Implementation Pathway
+
+This section outlines how pilot clinics and future clients can practically implement the CMS reimbursement programs that the Collect Cash module supports. This is the operational playbook for walking a clinic through the RPM/CCM revenue capture process.
+
+#### Phase A: Pre-Enrollment Setup (Weeks 1--2 of Clinic Onboarding)
+
+| Task | Owner | 3C Platform Support |
+|---|---|---|
+| Identify Medicare patients with qualifying chronic conditions (1+ for RPM, 2+ for CCM) | Clinic provider + care coordinator | Care module flags eligible patients based on EHR problem list data; generates prioritized enrollment list by risk score |
+| Establish RPM/CCM policies and procedures documentation | Clinic administrator | 3C provides template policies aligned with CMS requirements (MAC-specific where applicable) |
+| Train clinical staff on RPM device distribution and CCM documentation | VV + clinic | Training materials provided; dashboard walkthrough during onboarding |
+| Configure billing rules for clinic's MAC (Medicare Administrative Contractor) | VV Tech Lead | n8n billing workflows configured per clinic's specific MAC requirements and state Medicaid rules |
+| Verify clinic NPI is enrolled for RPM/CCM billing with their MAC | Clinic billing staff | Checklist provided; 3C tracks enrollment status per clinic |
+
+#### Phase B: Patient Enrollment (Ongoing, Starting Week 3)
+
+**RPM Enrollment Workflow:**
+1. Provider identifies eligible patient during visit or via 3C risk-stratified enrollment list
+2. Provider discusses RPM program benefits with patient
+3. Patient signs consent (digital capture via 3C Platform -- clinical consent + Medicare RPM consent)
+4. Care coordinator distributes cellular-connected RPM device (e.g., blood pressure cuff for hypertension patients)
+5. Care coordinator completes device setup and patient education (billable under CPT 99453)
+6. Device begins transmitting daily readings -- 3C Platform ingests data automatically via Tenovi/Smart Meter API
+7. 3C billing tracker begins counting transmission days toward 16-day threshold (CPT 99454) or 2-day threshold (CPT 99445)
+
+**CCM Enrollment Workflow:**
+1. Provider identifies patient with 2+ chronic conditions from 3C enrollment list
+2. Provider or care coordinator discusses CCM services with patient
+3. Patient signs CCM consent (digital capture via 3C Platform)
+4. Care coordinator creates or activates comprehensive care plan from 3C templates
+5. Care coordinator begins non-face-to-face care management activities (phone calls, medication reviews, referral coordination)
+6. 3C time-tracking component captures each activity's duration
+7. 3C billing tracker aggregates monthly time toward 20-minute threshold (CPT 99490)
+
+#### Phase C: Monthly Billing Cycle (Automated by 3C Platform)
+
+The following billing cycle runs automatically each month for enrolled patients:
+
+```
+Day 1-30: Data Collection
+├── RPM devices transmit daily readings → 3C ingests via API
+├── Clinician reviews RPM data, communicates with patients → 3C timer captures time
+├── Care coordinators perform CCM activities → 3C timer captures time
+│
+Day 30: Threshold Evaluation (n8n scheduled workflow)
+├── For each RPM patient:
+│   ├── Count transmission days
+│   │   ├── ≥16 days → Flag 99454 billable
+│   │   └── 2-15 days → Flag 99445 billable (NEW 2026)
+│   ├── Sum clinician interactive time
+│   │   ├── ≥20 min → Flag 99457 billable
+│   │   ├── Additional 20-min blocks → Flag 99458 (each block)
+│   │   └── 10-19 min → Flag 99470 billable (NEW 2026)
+│   └── Apply mutual exclusivity rules (99454 vs 99445; 99457 vs 99470)
+├── For each CCM patient:
+│   ├── Sum staff time
+│   │   ├── ≥20 min → Flag 99490 billable
+│   │   └── Additional 20-min blocks → Flag 99439 (up to 2x/month)
+│   └── If complex needs: ≥60 min → Flag 99487 billable
+│
+Day 30+: Billing Event Generation
+├── Auto-generate billing events for all patients meeting thresholds
+├── Validate each event against CMS rules (consent on file, documentation linked, no mutual exclusivity violations)
+├── Surface billing events in React dashboard for clinic billing staff review
+└── (Phase 2) Submit claims directly via clearinghouse integration
+```
+
+#### Phase D: Ongoing Program Management
+
+| Activity | Frequency | 3C Platform Role |
+|---|---|---|
+| Monitor patient device adherence (transmission days trending below 16) | Daily | Dashboard alerts for patients at risk of missing monthly threshold; care coordinator can intervene mid-month |
+| Review clinician time against billing thresholds | Weekly | Dashboard shows time-to-threshold per patient; helps clinicians prioritize interactions |
+| Patient re-enrollment and consent renewal | Annually or as needed | System tracks consent expiration and flags patients needing renewal |
+| MIPS quality measure tracking | Continuous | Real-time MIPS dashboard shows projected payment adjustment; RPM/CCM activities contribute to multiple MIPS measures |
+| Program performance reporting | Monthly | Automated reports: patients enrolled, billing events generated, revenue captured, threshold compliance rate |
+
+#### Key MAC and Payer Considerations
+
+Different Medicare Administrative Contractors (MACs) may have specific requirements for RPM/CCM billing. The 3C Platform's billing rules engine is configured per clinic to account for:
+
+- **MAC-specific documentation requirements** -- Some MACs require specific documentation elements beyond CMS minimums
+- **State Medicaid RPM/CCM coverage** -- Varies by state; Virginia Medicaid covers some RPM services. 3C billing rules accommodate dual-eligible patients
+- **Commercial payer RPM/CCM programs** -- Increasing number of commercial payers cover RPM/CCM with their own codes and requirements. Phase 2 adds payer-specific billing rule sets
+- **FQHC PPS considerations** -- FQHCs billing under the Prospective Payment System have different RPM/CCM reimbursement mechanics. 3C accommodates PPS clinics in Phase 2
+
+#### Client Talking Points for CMS Reimbursement
+
+When discussing the CMS reimbursement opportunity with prospective clinics:
+
+1. **"This is existing Medicare revenue you're entitled to."** RPM and CCM are established CMS billing programs -- not grants, not experimental. CMS expanded these codes in 2024 and again in 2026 specifically to increase adoption
+2. **"The barrier isn't eligibility -- it's operations."** Most RHCs have Medicare patients with chronic conditions who qualify. What clinics lack is the technology to track billing thresholds, document time, and submit compliant claims at scale
+3. **"Devices are included, and they work without WiFi."** Cellular-connected RPM devices are provided as part of the program. Patients don't need home internet or technical skills
+4. **"We automate the hard part."** The 3C Platform tracks every device transmission day, every minute of clinician time, and auto-generates billing events when CMS thresholds are met. Your billing staff reviews and submits -- the tracking is done
+5. **"Revenue starts within 30 days of enrollment."** Once a patient is enrolled and their device is transmitting, the first billable month begins immediately. No lengthy ramp-up required
+6. **"Better care AND better revenue."** RPM and CCM improve patient outcomes (early intervention on trending vitals, proactive care management) while generating new revenue. This isn't billing optimization at the expense of care -- it's CMS paying clinics to do what they should be doing anyway
+
 ---
 
 ## 4. DATABASE SCHEMA (Phase 1)
