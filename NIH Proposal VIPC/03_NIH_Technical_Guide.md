@@ -107,14 +107,14 @@ Input Features (50+)                    Model Pipeline
 | - Comorbidity index    |     |          |                        |
 |                        |     |          v                        |
 | Utilization Patterns   |     |  XGBoost Ensemble                |
-| - ED visits (6/12 mo)  |     |  - 500 trees                     |
-| - Hospitalizations     |     |  - max_depth: 6                  |
-| - Missed appointments  |     |  - learning_rate: 0.05           |
-| - Provider visit freq  |     |  - subsample: 0.8                |
-|                        |     |  - colsample_bytree: 0.8         |
-| Lab Values             |     |  - min_child_weight: 5           |
-| - A1C (latest + trend) |     |  - reg_alpha: 0.1                |
-| - eGFR                 |     |  - reg_lambda: 1.0               |
+| - ED visits (6/12 mo)  |     |  (initial defaults; final values |
+| - Hospitalizations     |     |   selected via Bayesian tuning)  |
+| - Missed appointments  |     |  - 500 trees                     |
+| - Provider visit freq  |     |  - max_depth: 6                  |
+|                        |     |  - learning_rate: 0.05           |
+| Lab Values             |     |  - subsample: 0.8                |
+| - A1C (latest + trend) |     |  - colsample_bytree: 0.8        |
+| - eGFR                 |     |  - min_child_weight: 5           |
 | - Lipid panel          |     |          |                        |
 | - CBC components       |     |          v                        |
 |                        |     |  SHAP Explainer                  |
@@ -166,8 +166,9 @@ CMS Public Use Files                    Pilot Clinic EHR Data
     |         Training / Validation Split                 |
     |                                                    |
     |  CMS Data: 5-fold stratified cross-validation       |
-    |  Pilot Data: Temporal split (train on months 1-6,   |
-    |              validate on months 7-9)                 |
+    |  Pilot Data: Leave-one-clinic-out CV across 2-3     |
+    |    sites + prospective validation (predictions in    |
+    |    months 6-7 vs. outcomes in months 7-9)            |
     |  Outcome: 30/60/90-day hospitalization or ED visit   |
     +--------------------------------------------------+
             |
@@ -183,6 +184,19 @@ CMS Public Use Files                    Pilot Clinic EHR Data
     |  Budget: 200 trials                                  |
     +--------------------------------------------------+
 ```
+
+**Outcome Label Definition:** The binary outcome label is defined as any all-cause acute care utilization (unplanned inpatient admission or emergency department visit) within the prediction horizon. Observation stays are classified as inpatient. ED visits resulting in inpatient admission are counted once (as inpatient). Expected base rate: 3--5% at 30 days, 10--15% at 90 days (based on CMS public use file analysis).
+
+**Class Imbalance Handling:** Given the expected 30-day hospitalization event rate of 3--5%, class imbalance is addressed via: (a) XGBoost `scale_pos_weight` parameter set to the inverse of the positive class proportion; (b) threshold optimization using the F1-score on the validation set rather than the default 0.5 threshold; (c) stratified sampling in all cross-validation folds to preserve class proportions; (d) AUC-PR reported alongside AUC-ROC as AUC-PR is more informative for imbalanced datasets.
+
+**CMS Dataset Provenance:**
+
+| Dataset | Source | Year | Approx. Size | Key Variables |
+|---|---|---|---|---|
+| Medicare Provider Utilization and Payment Data (Physician) | CMS.gov | 2022--2023 | ~10M records | Provider utilization, procedures, diagnoses |
+| Chronic Conditions Prevalence | CMS Chronic Conditions Data Warehouse | 2022 | ~60M beneficiaries | 27 chronic condition flags per beneficiary |
+| Hospital Readmissions Reduction Program | CMS.gov | 2023--2024 | ~3,000 hospitals | 30-day readmission rates by condition |
+| Social Determinants of Health (SDOH) | CMS/AHRQ SDOH Database | 2022 | County-level | SVI, broadband access, transportation, poverty |
 
 #### 2.1.3 Model Evaluation Framework
 
@@ -812,8 +826,23 @@ GROUP BY c.clinic_id, DATE_TRUNC('quarter', be.billing_period_start);
 | **Automatic Logoff (§164.312(a)(2)(iii))** | 15-minute session timeout; re-authentication for sensitive actions | Session management tests |
 | **Risk Assessment (§164.308(a)(1))** | Annual HIPAA Security Risk Assessment per NIST SP 800-66 | Assessment report on file |
 | **Workforce Training (§164.308(a)(5))** | HIPAA training for all team members; annual refresher | Training completion records |
+| **Contingency Plan (§164.308(a)(7))** | Disaster recovery plan, backup procedures, emergency mode operation | Annual DR drill; monthly backup restoration test |
 
-### 5.3 Encryption Key Management
+**n8n Community Edition HIPAA Access Control Mitigation:** n8n Community Edition lacks enterprise SSO/LDAP and fine-grained RBAC features. During Phase I, access to the n8n administrative interface is restricted to the VV engineering team via VPN + NGINX IP allowlisting. All clinic staff interact exclusively through the React frontend, which implements application-level RBAC. No clinic user has direct access to the n8n workflow interface. Phase II evaluation will assess n8n Enterprise Edition or an external OAuth2 Proxy for enterprise access control.
+
+### 5.3 Disaster Recovery
+
+| Parameter | Target |
+|---|---|
+| **Recovery Point Objective (RPO)** | 5 minutes (RDS Multi-AZ synchronous replication) |
+| **Recovery Time Objective (RTO)** | < 30 minutes (RDS automatic failover + ECS service relaunch) |
+| **Backup Frequency** | Daily automated RDS snapshots to S3 |
+| **Backup Retention** | 35 days |
+| **Restoration Testing** | Monthly restoration from backup to isolated environment |
+| **Failover Procedure** | Documented; annual drill with full team |
+| **Cross-Region** | S3 cross-region replication for backup redundancy |
+
+### 5.4 Encryption Key Management
 
 ```
 AWS KMS (GovCloud)
