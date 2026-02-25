@@ -1,6 +1,6 @@
 # VV TECHNICAL IMPLEMENTATION BRIEF
 
-**Prepared for:** Will Nelson (Technical Presenter) | Authentic Consortium
+**Prepared for:** Technical Presenter | Authentic Consortium
 **Presentation:** VIPC VVP Launch Grant -- Final Presentation (Wednesday, Feb 26, 2026)
 **Audience:** Jennifer O'Daniel (VVP Lead), Michael Jarvis (Healthcare Investor), Tai Mai (VIPC Healthcare Lead / MEDA Ventures)
 **Classification:** Internal Prep Document -- Do Not Distribute
@@ -255,9 +255,9 @@ Competitors sell point solutions:
 | **Contingency / additional pilots** | **$34,000** |
 | **Total** | **$50,000** |
 
-**Total project value:** ~$194,000 ($50K VIPC grant + ~$144K team sweat equity in-kind: Will at 640 hrs, plus clinical advisory, project management, and compliance expertise)
+**Total project value:** ~$194,000 ($50K VIPC grant + ~$144K team sweat equity in-kind: VV Technical Lead at 640 hrs, plus clinical advisory, project management, and compliance expertise)
 
-**Why 68% contingency?** Will is the developer. No contract developer cost. No enterprise licensing cost. The $50K funds infrastructure and operations -- not salaries or SaaS subscriptions. This gives ACT flexibility to expand the pilot, accelerate development, or absorb unexpected costs.
+**Why 68% contingency?** VV's technical lead is the developer. No contract developer cost. No enterprise licensing cost. The $50K funds infrastructure and operations -- not salaries or SaaS subscriptions. This gives ACT flexibility to expand the pilot, accelerate development, or absorb unexpected costs.
 
 ---
 
@@ -279,7 +279,7 @@ Competitors sell point solutions:
 "Cost and control. Salesforce Health Cloud licensing alone could consume 15--20% of the VIPC grant, and at scale, enterprise healthcare SaaS licensing can easily exceed $100K/year before serving a single patient. That kills unit economics for clinics with $34K--$95K total IT budgets. With our stack, each clinic costs us $100--$150/month in infrastructure at scale. We also get a higher security posture -- GovCloud is FedRAMP High vs Salesforce's FedRAMP Moderate. And we can customize every deployment to match each clinic's specific workflow, EHR, and payer mix."
 
 ### "Can you really build all this for $50K?"
-"Yes -- because I'm the developer. There's no contract developer cost and no licensing fees. The $50K funds infrastructure, devices, legal, and pilot operations. The development is sweat equity -- ~$144K in in-kind value. I'm building this on the same stack I use for our defense clients -- n8n, PostgreSQL, Docker on GovCloud. The technology isn't novel; what's novel is applying it to this market with this clinical and billing logic."
+"Yes -- because VV's technical lead is the developer. There's no contract developer cost and no licensing fees. The $50K funds infrastructure, devices, legal, and pilot operations. The development is sweat equity -- ~$144K in in-kind value. We're building this on the same stack VV uses for defense clients -- n8n, PostgreSQL, Docker on GovCloud. The technology isn't novel; what's novel is applying it to this market with this clinical and billing logic."
 
 ### HARD QUESTIONS
 
