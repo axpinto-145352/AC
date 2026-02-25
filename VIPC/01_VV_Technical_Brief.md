@@ -207,17 +207,17 @@ Competitors sell point solutions:
 |---|---|---|---|
 | **3C Platform software** (all source code, configurations, templates) | Copyright / Trade Secret | **ACT** | Private GitHub repos; copyright registration; work-for-hire agreement with VV |
 | **"Compliance → Care → Cash" unified data model** | Patent (provisional) | **ACT** | Provisional patent application targeting Month 2--3 |
-| **AI risk stratification + billing optimization pipeline** | Patent (provisional) | **ACT** | Novel combination of clinical risk scoring with automated CMS billing threshold detection |
+| **Automated RPM/CCM billing threshold detection and revenue optimization pipeline** | Patent (provisional) | **ACT** | Method for automated tracking of device transmission days, clinician time, and mutual exclusivity logic (99445/99454, 99470/99457) to generate verified billable events |
 | **n8n workflow template library** (EHR integration, RPM ingestion, billing automation) | Trade Secret | **ACT** | Proprietary clinic-specific workflow configurations are core competitive advantage |
 | **ML models** (risk stratification, deterioration prediction, coding optimization) | Trade Secret | **ACT** | Trained model weights, feature engineering, SHAP-based explainability pipeline |
 | **Clinical rules engine** (care gap detection, MIPS scoring, regulatory compliance logic) | Trade Secret | **ACT** | Proprietary encoding of CMS/HIPAA/HRSA rules into automated workflows |
 
 **What is patentable:**
-1. **The unified compliance-care-revenue platform architecture** -- the novel combination of regulatory compliance automation, AI-driven clinical risk stratification, and automated CMS billing capture on a single shared data model where each module's outputs feed the other modules. No existing system combines all three for any healthcare segment
+1. **The unified compliance-care-revenue platform architecture** -- the specific method of integrating regulatory compliance event tracking, AI-driven clinical risk stratification, and automated CMS billing capture on a single shared data model with bidirectional data flows where compliance status informs risk scoring, risk scores trigger care workflows that generate billable events, and billing outcomes feed back into compliance reporting. This creates a closed-loop system that no existing RHC platform implements
 2. **The automated RPM/CCM billing threshold detection and revenue optimization pipeline** -- the specific method of ingesting device data, tracking transmission days and clinician time against CMS billing rules, and auto-generating billable events with mutual exclusivity logic (99445 vs 99454, 99470 vs 99457)
-3. **The configuration-driven multi-tenant clinic deployment model** -- the method of deploying a standardized healthcare platform via feature flags and template workflows that adapt to each clinic's EHR, device mix, payer landscape, and regulatory requirements without custom code
+3. **The configuration-driven multi-tenant clinic deployment model** -- the method of deploying a standardized healthcare platform via feature flags and template workflows that adapt to each clinic's EHR, device mix, payer landscape, and regulatory requirements without custom code (protected as trade secret; configuration-driven deployment elements are folded into Patent #1 as part of the unified architecture)
 
-**Patent timeline:** File provisional patent application(s) during Phase 1 (Months 2--3) to establish priority date. Convert to full utility patent application within 12 months. Budget: ~$3,000--$5,000 from contingency for provisional filing (patent attorney + USPTO fees).
+**Patent timeline:** File 2 provisional patent applications during Phase 1 (Months 2--3) to establish priority date -- one covering the unified platform architecture with configuration-driven modularity, one covering the automated billing threshold detection pipeline. Convert to full utility patent applications within 12 months. Budget: ~$5,000--$7,000 from contingency for 2 provisional filings (patent attorney + USPTO fees). The configuration-driven deployment model is additionally protected as a trade secret (proprietary workflow templates and clinic configuration logic).
 
 ---
 
@@ -237,8 +237,8 @@ Competitors sell point solutions:
 
 | Phase | Timeline | Deliverables |
 |---|---|---|
-| **Phase 1: MVP** *(VIPC Grant)* | Months 1--4 | All 3 service tiers shippable: Essentials (compliance), Professional (+ care/RPM), Enterprise (+ billing). Provisional patent filed. 2--3 Virginia RHCs live across tiers |
-| **Phase 2: Full Product** | Months 5--10 | Tiers hardened. Additional EHR integrations. NLP coding, telehealth, denial prevention. 10+ Virginia RHCs. Land-and-expand (tier upgrades tracked). Patent converted to utility |
+| **Phase 1: MVP** *(VIPC Grant)* | Months 1--4 | All 3 service tiers shippable: Essentials (compliance), Professional (+ care/RPM), Enterprise (+ billing). Provisional patent applications filed (Months 2--3). 2--3 Virginia RHCs live across tiers |
+| **Phase 2: Full Product** | Months 5--10 | Tiers hardened. Additional EHR integrations. NLP coding, telehealth, denial prevention. 10+ Virginia RHCs. Land-and-expand (tier upgrades tracked). Provisional patents converted to utility applications |
 | **Phase 3: Scale** | Months 11--18 | Multi-region GovCloud. Automated onboarding (<1 day any tier). 50+ VA → national (WV, KY, TN, NC). Series A based on ARR, outcomes, patent portfolio |
 
 **$50K VIPC Grant Allocation:**
@@ -273,7 +273,7 @@ Competitors sell point solutions:
 "HL7 FHIR R4 -- the standard CMS mandated for interoperability. We use bonFHIR, a purpose-built FHIR integration library, inside our n8n workflow engine to connect to whichever EHR the clinic runs -- eClinicalWorks, athenahealth, MEDITECH, Azalea Health. Integration workflows are visual and clonable -- onboarding a new clinic with the same EHR takes hours, not weeks. For RPM devices, we integrate through cellular-connected aggregators like Tenovi (40+ FDA-cleared devices, single API) so they work for rural patients without WiFi."
 
 ### "What's the revenue model?"
-"SaaS subscription -- $500 to $4,000 per clinic per month across three tiers, with most clinics expected at the $2,000/month level. At the entry tier, the platform unlocks $195,000 to $267,000 per year in new CMS reimbursement -- an 8--11x return on the clinic's subscription cost. And because we built on open-source infrastructure, our gross margins are 93--95% at scale. No enterprise licensing eating our unit economics."
+"SaaS subscription -- $500 to $4,000 per clinic per month across three tiers. At the Enterprise tier, the platform unlocks $195,000 to $267,000 per year in new CMS reimbursement. Even at the Professional tier, RPM device monitoring alone can generate $50,000 or more in new annual revenue per clinic -- well above the subscription cost. And because we built on open-source infrastructure, our gross margins are 93--95% at scale. No enterprise licensing eating our unit economics."
 
 ### "Why not use Salesforce or an existing platform?"
 "Cost and control. Salesforce Health Cloud licensing alone could consume 15--20% of the VIPC grant, and at scale, enterprise healthcare SaaS licensing can easily exceed $100K/year before serving a single patient. That kills unit economics for clinics with $34K--$95K total IT budgets. With our stack, each clinic costs us $100--$150/month in infrastructure at scale. We also get a higher security posture -- GovCloud is FedRAMP High vs Salesforce's FedRAMP Moderate. And we can customize every deployment to match each clinic's specific workflow, EHR, and payer mix."
@@ -293,7 +293,7 @@ Competitors sell point solutions:
 "We target 2--3 pilot clinics, not one -- a single dropout doesn't kill it. If staff adoption is low, we involve clinic staff in Sprint 1 design so the UI matches their workflow. If RPM enrollment is low, we provide devices at no cost to patients. If EHR integration takes longer than expected, we fall back to CSV import. And with $34K in contingency, we have budget to pivot."
 
 ### "Who owns the IP? Is this patentable?"
-"All intellectual property is owned by Authentic Consortium. VV develops the platform under a work-for-hire arrangement with ACT. We've identified three patentable innovations: the unified compliance-care-revenue platform architecture, the automated RPM/CCM billing threshold detection pipeline, and the configuration-driven multi-tenant clinic deployment model. We plan to file a provisional patent in Months 2--3 to establish our priority date, funded from the contingency budget. The underlying open-source tools are free to use -- what's proprietary is our specific combination, our clinical logic, our workflow templates, and our trained ML models. That's the IP."
+"All intellectual property is owned by Authentic Consortium. VV develops the platform under a work-for-hire arrangement with ACT. We've identified three areas of protectable innovation: the unified compliance-care-revenue platform architecture, the automated RPM/CCM billing threshold detection pipeline, and the configuration-driven clinic deployment model. We plan to file provisional patents on the first two in Months 2--3 to establish our priority date, and protect the configuration and workflow logic as trade secrets. The underlying open-source tools are free to use -- what's proprietary is our specific integration architecture, our clinical logic, our workflow templates, and our trained ML models. That's the IP."
 
 ### "What's your FDA regulatory risk?"
 "Our risk stratification qualifies for the clinical decision support exemption under the 21st Century Cures Act -- all four criteria: doesn't acquire device signals, displays medical information, supports provider recommendations, and the provider can independently review the basis for every score via SHAP values. The January 2026 FDA CDS guidance update broadens enforcement discretion in our favor."
@@ -304,7 +304,7 @@ Competitors sell point solutions:
 
 ### Jennifer O'Daniel (VVP Lead)
 - **Cares about:** Virginia economic impact, job creation, grant ROI, scalability, IP creation
-- **Hit:** "The $50K grant funds 2--3 Virginia RHC pilots over 4 months. Combined project value is ~$194K -- $50K from VIPC plus ~$144K in sweat equity. All IP is owned by ACT, a Virginia entity -- we're filing a provisional patent on the unified platform architecture during Phase 1. Because we built on open-source infrastructure, $34K of the grant is contingency. Pilot data positions ACT for a seed or Series A raise by Month 10, enabling ACT to hire Virginia-based technical and implementation staff to support statewide rollout. The modular tiering means we can serve every rural clinic in Virginia, from the smallest 200-patient RHC to the largest FQHC."
+- **Hit:** "The $50K grant funds 2--3 Virginia RHC pilots over 4 months. Combined project value is ~$194K -- $50K from VIPC plus ~$144K in sweat equity. All IP is owned by ACT, a Virginia entity -- we're filing 2 provisional patents on the unified platform architecture and the billing automation pipeline during Phase 1. Because we built on open-source infrastructure, $34K of the grant is contingency. Pilot data positions ACT for a seed or Series A raise by Month 10, enabling ACT to hire Virginia-based technical and implementation staff to support statewide rollout. The modular tiering means we can serve every rural clinic in Virginia, from the smallest 200-patient RHC to the largest FQHC."
 
 ### Michael Jarvis (Investor -- HADRIUS/Compliance + OHM/Wearables)
 - **Cares about:** Compliance tech market, wearables/preventive health, investment thesis validation
@@ -317,4 +317,4 @@ Competitors sell point solutions:
 ---
 
 *Prepared by: VV Technical Strategy | Authentic Consortium*
-*Version 2.0 -- February 24, 2026*
+*Version 3.0 -- February 25, 2026*

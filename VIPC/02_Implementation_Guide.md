@@ -1,6 +1,6 @@
 # 3C PLATFORM -- IMPLEMENTATION GUIDE
 
-**Version:** 2.0 | **Classification:** Internal -- Authentic Consortium
+**Version:** 3.0 | **Classification:** Internal -- Authentic Consortium
 **Prepared by:** Veteran Vectors (VV) Engineering
 **Date:** February 25, 2026
 **Purpose:** Actionable build plan for the 3C Platform assuming VIPC VVP Launch Grant award ($50K)
@@ -75,7 +75,7 @@ This is the engineering and business execution plan for the **3C Platform** -- a
 
 **Key MVP decisions:**
 - **Hybrid ingestion pattern.** Python/FastAPI service handles high-frequency RPM device data polling (Tenovi/Smart Meter APIs). n8n handles workflow orchestration on top -- alert routing when thresholds are exceeded, billing event generation, care gap detection. This split is based on production architecture research: n8n excels at workflow orchestration but dedicated services are more robust for high-frequency data ingestion
-- **n8n Community Edition is sufficient for Phase 1.** Throughput: ~15--23 req/s single mode depending on instance size (n8n benchmarks show ~15 req/s stable on smaller instances; ~23 req/s on larger instances with elevated failure rates). Our load: ~1--5 req/s at peak with 2--3 clinics -- well within single-mode capacity. Queue mode (Enterprise or self-hosted with Redis) is a Phase 2 upgrade path when scaling to 10+ clinics
+- **n8n Community Edition is sufficient for Phase 1.** Throughput: ~15--23 req/s single mode depending on instance size (n8n benchmarks show ~15 req/s stable on smaller instances; ~23 req/s on larger instances with elevated failure rates). Our load: ~1--5 req/s at peak with 2--3 clinics -- well within single-mode capacity. Queue mode (available in Community Edition with Redis) is a Phase 2 upgrade path when scaling to 10+ clinics. n8n Enterprise adds multi-main HA and worker monitoring UI if needed
 - **bonFHIR for FHIR integration.** Purpose-built n8n community node (Apache 2.0) providing native FHIR R4 actions and triggers. Chosen specifically because it was designed for self-hosted HIPAA-compliant n8n deployments
 - **PostgreSQL row-level security for multi-tenancy.** Each clinic is a tenant. RLS policies enforce data isolation at the database level -- not just application code. PGAudit logs every query against PHI tables. This pattern is validated by AWS reference architectures and HIPAA compliance guidance
 - **n8n Community Edition HIPAA access control gap.** Community Edition lacks SSO/LDAP and RBAC (Enterprise-only features). Phase 1 mitigation: restrict n8n UI access to VV engineering team only via VPN + NGINX IP allowlisting. All clinic staff interact exclusively through the React frontend, which implements application-level RBAC. n8n processes PHI in workflows but no clinic user directly accesses the n8n interface. Phase 2: evaluate n8n Enterprise or implement external auth proxy (e.g., OAuth2 Proxy) in front of n8n
@@ -215,7 +215,7 @@ The 3C Platform is architected as **independent, composable modules** controlled
 | 99454 | RPM device supply/data (monthly) | $52.11 | 16+ days of data transmission |
 | 99445 | RPM device supply/data (2--15 days) -- NEW 2026 | ~$52.11 | 2--15 days of data transmission (mutually exclusive with 99454; bill one per 30-day period) |
 | 99457 | RPM first 20 min interactive (monthly) | $51.77 | 20 min clinician time |
-| 99458 | RPM additional 20 min | ~$41.42 | Each additional 20 min beyond 99457 |
+| 99458 | RPM additional 20 min | ~$41.52 | Each additional 20 min beyond 99457 |
 | 99470 | RPM first 10 min interactive -- NEW 2026 | ~$26.05 | 10--19 min clinician time (mutually exclusive with 99457; bill one per calendar month) |
 | 99490 | CCM first 20 min (monthly) | $66.30 | 20 min staff time, 2+ chronic conditions |
 | 99439 | CCM additional 20 min (up to 2x/month) | $50.56 | Each additional 20 min |
@@ -297,8 +297,8 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 | Month | Sprint | Deliverables | Tier Unlocked |
 |---|---|---|---|
-| **Month 1** | Sprint 1--2 | **Foundation + Essentials Tier:** GovCloud environment provisioned (ECS Fargate, RDS PostgreSQL, S3, KMS). Database schema deployed with RLS + `clinic_config` module flags. NGINX + TLS configured. React scaffold with auth (Keycloak or custom JWT). Patient import from pilot clinic (CSV or FHIR bulk). **HIPAA compliance tracker live.** CMS quality dashboard (basic). Care plan templates for diabetes, hypertension, CHF. **File provisional patent application on unified 3C architecture** | **Essentials: shippable** |
-| **Month 2** | Sprint 3--4 | **Professional Tier:** EHR FHIR integration with pilot clinic EHR (bonFHIR node in n8n, Backend Services auth). RPM device integration (Python ingestion service + 1--2 device types via Tenovi/Smart Meter). RPM data flowing into PostgreSQL + displayed in dashboard. Alert rules configured. Care gap detection for top 6 preventive measures. Risk stratification model v1 trained and deployed (FastAPI on Fargate) | **Professional: shippable** |
+| **Month 1** | Sprint 1--2 | **Foundation + Essentials Tier:** GovCloud environment provisioned (ECS Fargate, RDS PostgreSQL, S3, KMS). Database schema deployed with RLS + `clinic_config` module flags. NGINX + TLS configured. React scaffold with auth (Keycloak or custom JWT). Patient import from pilot clinic (CSV or FHIR bulk). **HIPAA compliance tracker live.** CMS quality dashboard (basic). Care plan templates for diabetes, hypertension, CHF. **Engage patent attorney for provisional patent applications** | **Essentials: shippable** |
+| **Month 2** | Sprint 3--4 | **Professional Tier:** EHR FHIR integration with pilot clinic EHR (bonFHIR node in n8n, Backend Services auth). RPM device integration (Python ingestion service + 1--2 device types via Tenovi/Smart Meter). RPM data flowing into PostgreSQL + displayed in dashboard. Alert rules configured. Care gap detection for top 6 preventive measures. Risk stratification model v1 trained and deployed (FastAPI on Fargate). **File provisional patent applications (unified architecture + billing pipeline)** | **Professional: shippable** |
 | **Month 3** | Sprint 5--6 | **Enterprise Tier:** RPM billing tracker live (n8n auto-flagging 99453/99454/99445/99457 thresholds). CCM time tracking (React timer + n8n billing logic). MIPS quality measure dashboard (basic, 3--5 measures). Patient consent capture workflow. End-to-end testing with pilot clinic staff | **Enterprise: shippable** |
 | **Month 4** | Sprint 7--8 | **Pilot Launch:** 2--3 Virginia RHCs live (at least 1 on each tier to validate tiering model). Staff training completed. Baseline metrics captured. Bug fixes and UX refinements. Pilot outcomes report for Series A / next funding round | **All 3 tiers validated** |
 
@@ -484,7 +484,7 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 ## 10. SUCCESS METRICS
 
-### 9.1 Phase 1 KPIs (Month 4 Report)
+### 10.1 Phase 1 KPIs (Month 4 Report)
 
 | Category | Metric | Target |
 |---|---|---|
@@ -499,7 +499,7 @@ audit_trail          -- application-level PHI access log (who, what, when)
 | **Platform** | System uptime | >99.5% |
 | **Platform** | New clinic onboarding time | <2 weeks |
 
-### 9.2 Series A Metrics (Month 10)
+### 10.2 Series A Metrics (Month 10)
 
 | Metric | Target |
 |---|---|
@@ -512,7 +512,7 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 ---
 
-## 10. COMPETITIVE LANDSCAPE
+## 11. COMPETITIVE LANDSCAPE
 
 | Competitor | What They Do | Why 3C Wins |
 |---|---|---|
@@ -533,13 +533,13 @@ audit_trail          -- application-level PHI access log (who, what, when)
 6. **VV defense pedigree** -- GovCloud infrastructure, security-first architecture, classified deployment experience
 7. **Virginia-first** -- local relationships, VIPC backing, state policy alignment
 
-**Pricing:** $500--$4,000/month per clinic (3 tiers). At the $2,000/month entry tier, platform unlocks $195K--$267K/year in new revenue -- **8--11x return on subscription cost.**
+**Pricing:** $500--$4,000/month per clinic (3 tiers). At the Professional tier ($2,000/month typical), the platform unlocks $195K--$267K/year in new CMS reimbursement -- an **8--11x return on subscription cost.** Even Essentials-tier clinics see ROI through compliance automation and MIPS penalty avoidance.
 
 **Funding tailwind:** $50B Rural Health Transformation (RHT) Program (Public Law 119-21, $10B/year FY2026--FY2030) allocates funding to states for healthcare technology infrastructure. Virginia's FY2026 allocation is estimated at $147M--$281M. Position 3C as eligible technology spend for RHT state grants.
 
 ---
 
-## 11. RISK REGISTER
+## 12. RISK REGISTER
 
 | Risk | Severity | Likelihood | Mitigation |
 |---|---|---|---|
@@ -548,7 +548,7 @@ audit_trail          -- application-level PHI access log (who, what, when)
 | **RPM patient enrollment low** | MEDIUM | HIGH | Provide devices at no cost (grant-funded). Start with highest-risk patients. Clinic champion (MA/nurse) leads enrollment |
 | **ML model underperforms** | MEDIUM | LOW | Fall back to validated clinical risk scores (LACE index). ML is enhancement, not dependency |
 | **HIPAA breach during pilot** | HIGH | LOW | KMS encryption from Day 1. BAAs with all vendors. Synthetic data for dev/test. Incident response plan before pilot |
-| **n8n Community Edition throughput limit** | LOW | LOW | 23 req/s single mode is 10x our Phase 1 load. Upgrade to Enterprise queue mode in Phase 2 if needed |
+| **n8n Community Edition throughput limit** | LOW | LOW | 23 req/s single mode is 10x our Phase 1 load. Upgrade to queue mode with Redis workers in Phase 2 if needed (available in Community Edition) |
 | **EHR vendor blocks API access** | MEDIUM | LOW | Apply for developer program early. Backup: CSV/manual import. Multiple pilot clinics reduces single-EHR dependency |
 | **AWS GovCloud cost overrun** | LOW | LOW | $34K contingency. GovCloud pricing is well-documented. Set billing alerts at $1K/month |
 | **Pilot clinic drops out mid-project** | HIGH | MEDIUM | Secure LOIs from 4--5 candidate clinics. Maintain "cold start" demo mode with synthetic data. 2--3 clinic target provides redundancy |
@@ -556,7 +556,7 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 ---
 
-## 12. IMMEDIATE NEXT STEPS (Post-Grant Award)
+## 13. IMMEDIATE NEXT STEPS (Post-Grant Award)
 
 | Action | Owner | Deadline | Dependency |
 |---|---|---|---|

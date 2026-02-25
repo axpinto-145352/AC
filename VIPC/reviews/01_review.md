@@ -1,487 +1,474 @@
 # REVIEW: VV Technical Implementation Brief (01_VV_Technical_Brief.md)
 
-**Reviewer:** Senior Healthcare Technology Consultant
+**Reviewer:** Senior Healthcare Technology Architect & IP Attorney
 **Date:** February 25, 2026
 **Review Against:** 02_Implementation_Guide.md (cross-consistency check)
 **Presentation Date:** Wednesday, February 26, 2026
-**Document Version Reviewed:** Version 2.0 (February 24, 2026) -- post-Salesforce-to-n8n stack migration
+**Document Version Reviewed:** Version 3.0 -- incorporating IP ownership strategy, patent strategy, modular service tiering, MVP-to-scale phasing, and configuration-driven feature flags
+**Previous Review Version:** Version 2.0 review (February 24, 2026)
 
 ---
 
 ## 1. Overall Assessment
 
-**Grade: B+**
+**Grade: A-**
 
-This is a markedly improved document from any Salesforce-based predecessor. The migration to n8n + PostgreSQL + Python/FastAPI + React on GovCloud is a stronger technical story for this audience -- it eliminates the licensing cost vulnerability, strengthens the open-source/no-vendor-lock-in narrative, and makes the 97% gross margin claim defensible. The 3C framework is memorable, the audience-specific talking points are well-crafted, and the Q&A prep now includes hard questions. The two documents (Brief and Implementation Guide) are largely consistent, which is a significant improvement.
+Version 3.0 is a substantially stronger document than the 2.0 draft reviewed yesterday. The critical numerical corrections from the prior review have all been applied (revenue unlock now $195K--$267K, COGS corrected to $100--$150/month, gross margin corrected to 93--95%, project value corrected to ~$194K, "ships" changed to "designed," etc.). More importantly, the document now tells a complete IP and business model story that was previously absent. The addition of IP ownership strategy, patent claims, modular tiering, and configuration-driven feature flags transforms this from a "we can build something" pitch into a "we are building a defensible, scalable business" pitch.
 
-However, there remain several numerical inconsistencies, a handful of unsupported claims that could embarrass the presenter under scrutiny, some internal math errors, and a few places where the Brief overstates what Phase 1 actually delivers. These are all fixable before tomorrow. Issues below are ordered by severity within each section.
+However, the new content introduces its own set of issues -- particularly around patent defensibility assertions, the ambition of delivering all three tiers in a 4-month Phase 1, and several cross-document inconsistencies in the new sections. The IP/patent section requires careful calibration: the claims are directionally correct but contain assertions that a patent examiner (or a technically sophisticated panelist like Tai Mai) could challenge. The tiering model is architecturally sound but the Phase 1 promise to have all three tiers "shippable" in four months with a single developer is aggressive.
 
----
-
-## 2. Section-by-Section Review
-
-### Executive Summary (Lines 10-13)
-
-**Strengths:**
-- The 3C framing is crisp and immediately understandable.
-- "Same proven stack VV deploys for defense clients" is the right lead -- establishes credibility immediately.
-- "No enterprise licensing, no per-seat fees, no vendor lock-in" is a strong differentiator that will resonate with all three panelists.
-
-**Issues:**
-
-1. **Line 12: "The platform ships as a turnkey system deployable to any RHC, then customizable per clinic's EHR, device mix, payer landscape, and workflows."** The word "ships" implies a finished product. This is a pre-MVP grant pitch. The Implementation Guide makes clear this is Months 1-4 build work. The word choice creates an expectation gap.
-
-**OLD TEXT (Line 12):**
-```
-The platform ships as a turnkey system deployable to any RHC, then customizable per clinic's EHR, device mix, payer landscape, and workflows.
-```
-
-**NEW TEXT:**
-```
-The platform is designed as a turnkey system deployable to any RHC, then customizable per clinic's EHR, device mix, payer landscape, and workflows.
-```
+These issues are all correctable. The document's core narrative -- unified platform, open-source stack, military-grade infrastructure, IP-protected, modular pricing -- is the right story for this audience and this grant.
 
 ---
 
-### Section 1: The Problem (Lines 16-24)
+## 2. IP/Patent Strategy Review (Section 4.4 and Q&A)
 
-**Strengths:**
-- The "106 RHCs + 27 FQHCs" Virginia framing is specific and verifiable (CMS Provider of Services file).
-- The "3 Virginia RHCs closing in 2025" is topical and powerful.
-- The interconnection insight on Line 24 is the single best sentence in the document.
+This is the most consequential new content in Version 3.0. The IP section is well-structured and hits the right notes for a VIPC audience (ACT owns everything, Virginia entity, patent filings planned). However, as an IP attorney, I see several issues that range from defensibility risks to presentation hazards.
 
-**Issues:**
+### 2.1 IP Ownership Structure -- Strong
 
-2. **Line 18: "106 Rural Health Clinics and 27 FQHCs (5,500+ RHCs nationally)"** -- These numbers are inconsistent with Section 5 (Line 189), which says "106 RHCs + 27 FQHCs" totaling 133, but then the Virginia TAM on Line 191 calculates based on 133 clinics at $2K-$4K/month and arrives at "$3.2M--$6.4M/year." Let us check: 133 clinics x $2,000/month x 12 = $3.19M and 133 x $4,000 x 12 = $6.38M. The math checks out. Good -- this is internally consistent.
+The ownership framing is clean and correct:
+- ACT owns all IP
+- VV develops under work-for-hire arrangement
+- The table at Section 4.4 correctly categorizes assets by type (copyright, patent, trade secret)
+- The Q&A answer on Line 296 correctly summarizes the structure
 
-3. **Line 20: "A single RHC may face 15+ distinct regulatory obligations"** -- No source cited. This number is plausible (HIPAA Privacy Rule, HIPAA Security Rule, HIPAA Breach Notification, OSHA, CLIA, CMS CoPs, Stark Law, Anti-Kickback, state licensure, CMS quality reporting/MIPS, FCC broadband, HRSA reporting for FQHCs, state Medicaid, 42 CFR Part 2, ADA). That actually gets to ~15, so the claim holds. But Tai Mai (physician background) may challenge it. Recommend adding "(HIPAA, CLIA, CMS CoPs, MIPS, FCC, OSHA, state licensure, and others)" in parentheses to make it concrete.
+**One gap:** The documents state VV develops under a "work-for-hire arrangement" but the Implementation Guide's Next Steps (Line 575) lists "Execute VV-ACT work-for-hire / IP assignment agreement" as a post-grant-award Week 1 action. This means the agreement does not yet exist. If asked "do you have the IP assignment agreement in place?", the honest answer is "it will be executed in Week 1 post-award." This is normal for a pre-revenue startup, but Will should not imply the agreement already exists.
 
-4. **Line 22: "$100K--$250K per clinic per year on the table in unrealized RPM, CCM, and quality bonus revenue"** -- The Implementation Guide (Lines 203-211) calculates $195K-$267K using a bottoms-up model (80 RPM patients + 120 CCM patients + MIPS penalty avoidance). The Brief says $100K-$250K. These ranges overlap but the low end of the Brief ($100K) is far below the Guide's low end ($195K), and the high end of the Brief ($250K) is below the Guide's high end ($267K). The discrepancy signals that one document used rough estimates while the other did real math. **Use the Implementation Guide's numbers -- they are sourced from CPT codes and are more defensible.**
+**Severity: LOW** -- normal for this stage, but be prepared for the question.
 
-**OLD TEXT (Line 22):**
+### 2.2 Patent Claim #1: "Unified Compliance-Care-Revenue Platform Architecture"
+
+**Brief, Line 216:** "The novel combination of regulatory compliance automation, AI-driven clinical risk stratification, and automated CMS billing capture on a single shared data model where each module's outputs feed the other modules. No existing system combines all three for any healthcare segment."
+
+**Assessment: MEDIUM-HIGH RISK.**
+
+The claim of novelty rests on the assertion that no existing system combines all three functions. This is a strong market-positioning statement but a weak patent claim for the following reasons:
+
+1. **Aggregation of known functions is generally not patentable.** Under Alice Corp. v. CLS Bank (2014) and its progeny, software patents must demonstrate something more than combining known techniques in a predictable way. A patent examiner will argue that compliance tracking, clinical risk scoring, and billing automation are all well-known functions, and combining them on a shared database is an obvious design choice, not an inventive step.
+
+2. **The "no existing system" claim is a market observation, not a patentability criterion.** The absence of a combined product in the market does not establish non-obviousness under 35 U.S.C. 103. A patent examiner will look at whether a person skilled in the art would find the combination obvious given the prior art in each domain separately.
+
+3. **Prior art risk is high.** Epic Systems' Healthy Planet module combines quality reporting, care management, and revenue cycle analytics on a shared data model. Athenahealth combines EHR, RCM, and care coordination. These are not identical to the 3C Platform, but a patent examiner will cite them as prior art for the "unified platform" concept. The novelty would need to reside in the specific technical method of integration, not the business concept of "three things on one platform."
+
+4. **The claim scope is extremely broad.** "Any healthcare segment" in the assertion is aspirational but would make the claim easy to challenge and hard to enforce.
+
+**Recommendation:** The provisional patent should focus narrowly on the specific technical implementation -- the data model relationships between compliance events, clinical risk scores, and billing triggers; the specific workflow orchestration patterns in n8n that create the feedback loop between modules; and the feature-flag-driven module activation on a shared tenant. The broader "unified platform" framing is better suited as trade dress or brand positioning than patent claims.
+
+**OLD TEXT (Line 216):**
 ```
-RHCs leave an estimated $100K--$250K per clinic per year on the table in unrealized RPM, CCM, and quality bonus revenue
+1. **The unified compliance-care-revenue platform architecture** -- the novel combination of regulatory compliance automation, AI-driven clinical risk stratification, and automated CMS billing capture on a single shared data model where each module's outputs feed the other modules. No existing system combines all three for any healthcare segment
 ```
 
 **NEW TEXT:**
 ```
-RHCs leave an estimated $195K--$267K per clinic per year on the table in unrealized RPM, CCM, and quality bonus revenue (based on conservative RPM/CCM enrollment rates and MIPS penalty avoidance)
+1. **The unified compliance-care-revenue platform architecture** -- the specific method of integrating regulatory compliance event tracking, AI-driven clinical risk stratification, and automated CMS billing capture on a single shared data model with bidirectional data flows where compliance status informs risk scoring, risk scores trigger care workflows that generate billable events, and billing outcomes feed back into compliance reporting. This creates a closed-loop system that no existing RHC platform implements
 ```
+
+### 2.3 Patent Claim #2: "Automated RPM/CCM Billing Threshold Detection Pipeline"
+
+**Brief, Line 217:** "the specific method of ingesting device data, tracking transmission days and clinician time against CMS billing rules, and auto-generating billable events with mutual exclusivity logic (99445 vs 99454, 99470 vs 99457)"
+
+**Assessment: STRONGEST OF THE THREE CLAIMS -- but with caveats.**
+
+This is the most defensible patent claim because it describes a specific technical process, not just a business concept. The mutual exclusivity logic for the new 2026 CMS codes (99445/99454, 99470/99457) is a particularly strong element because:
+
+1. These codes are new for CY2026, meaning prior art in automated billing systems will not have addressed them.
+2. The specific logic for determining which code to bill based on transmission day counts and clinician time thresholds is a definable method.
+3. The auto-generation of billable events from ingested device data, with threshold tracking and mutual exclusivity enforcement, is a concrete process claim.
+
+**Caveats:**
+
+1. **The CPT code references contain an error.** Line 217 references "99445 vs 99454" for device supply mutual exclusivity, which matches the Implementation Guide (Line 202, 216). However, the Brief also references "99470 vs 99457" for clinician time mutual exclusivity. Both documents are internally consistent on these codes. But the Brief's Section 4.4 IP table on Line 210 does not mention 99470 at all -- it only says "Novel combination of clinical risk scoring with automated CMS billing threshold detection." The patent description in the IP table (Line 210) is less specific than the patentability assertion (Line 217). These should match.
+
+**OLD TEXT (Line 210):**
+```
+| **AI risk stratification + billing optimization pipeline** | Patent (provisional) | **ACT** | Novel combination of clinical risk scoring with automated CMS billing threshold detection |
+```
+
+**NEW TEXT:**
+```
+| **Automated RPM/CCM billing threshold detection and revenue optimization pipeline** | Patent (provisional) | **ACT** | Method for automated tracking of device transmission days, clinician time, and mutual exclusivity logic (99445/99454, 99470/99457) to generate verified billable events |
+```
+
+2. **"Auto-generating billable events" carries regulatory risk language.** While the Implementation Guide correctly states "All auto-generated billing events validated against actual clinical documentation. No false claims" (Line 429), the Brief's patent claim does not include this validation step. For both patent specification and False Claims Act exposure, the method should include the clinical documentation validation as a process step.
+
+**Severity: MEDIUM** -- the patent claim is sound but the Brief's description is less precise than the Guide's.
+
+### 2.4 Patent Claim #3: "Configuration-Driven Multi-Tenant Clinic Deployment Model"
+
+**Brief, Line 218:** "the method of deploying a standardized healthcare platform via feature flags and template workflows that adapt to each clinic's EHR, device mix, payer landscape, and regulatory requirements without custom code"
+
+**Assessment: WEAKEST OF THE THREE CLAIMS -- HIGH RISK OF REJECTION.**
+
+Feature flags and configuration-driven deployment are pervasive in SaaS engineering. Multi-tenant architecture with per-tenant configuration is not novel. The healthcare-specific application adds some narrowing, but:
+
+1. **Prior art is extensive.** Salesforce Health Cloud, Athenahealth, eClinicalWorks, and virtually every multi-tenant healthcare SaaS uses per-tenant configuration to adapt to different EHRs, payer mixes, and regulatory requirements. The specific mechanism (feature flags in a PostgreSQL JSONB column) is a well-known pattern.
+
+2. **n8n template workflows are a feature of n8n, not an invention by ACT.** n8n's workflow template cloning is built-in functionality. Using it to deploy healthcare workflows is an application, not an invention.
+
+3. **This claim would face an Alice Corp. challenge.** "Deploy a standard platform with configuration flags" is arguably an abstract idea implemented on a generic computer. Without a specific technical improvement to the configuration mechanism itself, this will not survive patent examination.
+
+**Recommendation:** Do not file this as a separate provisional patent. Instead, fold the configuration-driven deployment elements into Patent Claim #1 as part of the unified platform architecture. The modularity and feature-flag activation become part of how the unified system operates, not a standalone invention. This strengthens Claim #1 and avoids wasting patent budget on a claim likely to be rejected.
+
+**This also affects the filing count.** The Brief (Line 220) says "File provisional patent application(s) during Phase 1 (Months 2--3)" and the title of Section 4.4's patent strategy references "3 provisional patent applications planned." The Implementation Guide (Line 467) says "File 1--2 provisional patent applications." These are already inconsistent, and the recommendation is to file 2 (Claims #1 and #2), not 3.
+
+**OLD TEXT (Line 220):**
+```
+**Patent timeline:** File provisional patent application(s) during Phase 1 (Months 2--3) to establish priority date. Convert to full utility patent application within 12 months. Budget: ~$3,000--$5,000 from contingency for provisional filing (patent attorney + USPTO fees).
+```
+
+**NEW TEXT:**
+```
+**Patent timeline:** File 2 provisional patent applications during Phase 1 (Months 2--3) to establish priority date -- one covering the unified platform architecture with configuration-driven modularity, one covering the automated billing threshold detection pipeline. Convert to full utility patent applications within 12 months. Budget: ~$3,000--$5,000 from contingency for provisional filings (patent attorney + USPTO fees). The configuration-driven deployment model is better protected as a trade secret (proprietary workflow templates and clinic configuration logic) than as a standalone patent.
+```
+
+### 2.5 Patent Budget Assessment
+
+The Brief budgets $3,000--$5,000 for provisional filings from contingency. The Guide (Line 467) matches this. For 2 provisional patent applications:
+
+- USPTO provisional patent filing fee: $320 per application (micro entity) = $640
+- Patent attorney drafting: $1,500--$3,000 per provisional (this is the low end for a competent patent attorney; $2,000--$4,000 is more typical for healthcare method patents)
+- Total for 2 provisionals: ~$3,640--$7,640
+
+The $3,000--$5,000 budget is tight for 2 well-drafted provisionals. A poorly drafted provisional establishes a priority date but may not adequately support the later utility application claims. Recommend budgeting $5,000--$7,000 and being prepared to use additional contingency.
+
+**OLD TEXT (Line 220, budget portion):**
+```
+Budget: ~$3,000--$5,000 from contingency for provisional filing (patent attorney + USPTO fees).
+```
+
+**NEW TEXT:**
+```
+Budget: ~$5,000--$7,000 from contingency for 2 provisional filings (patent attorney + USPTO fees).
+```
+
+### 2.6 Trade Secret Strategy -- Well Constructed
+
+The trade secret designations for ML models, n8n workflow templates, and clinical rules engine are appropriate. These are the correct IP protection mechanisms for:
+- Trained model weights and feature engineering (hard to reverse-engineer from API outputs)
+- Clinic-specific workflow configurations (operational know-how)
+- Regulatory rules encoding (CMS/HIPAA logic translated to automated workflows)
+
+The open-source vs. proprietary boundary table in the Implementation Guide (Section 9.4) is particularly well done. No changes needed.
+
+### 2.7 Q&A Answer on IP/Patents (Line 295-296)
+
+The Q&A answer is well-structured but makes one overclaim.
+
+**OLD TEXT (Line 296):**
+```
+"All intellectual property is owned by Authentic Consortium. VV develops the platform under a work-for-hire arrangement with ACT. We've identified three patentable innovations: the unified compliance-care-revenue platform architecture, the automated RPM/CCM billing threshold detection pipeline, and the configuration-driven multi-tenant clinic deployment model. We plan to file a provisional patent in Months 2--3 to establish our priority date, funded from the contingency budget. The underlying open-source tools are free to use -- what's proprietary is our specific combination, our clinical logic, our workflow templates, and our trained ML models. That's the IP."
+```
+
+**NEW TEXT:**
+```
+"All intellectual property is owned by Authentic Consortium. VV develops the platform under a work-for-hire arrangement with ACT. We've identified three areas of protectable innovation: the unified compliance-care-revenue platform architecture, the automated RPM/CCM billing threshold detection pipeline, and the configuration-driven clinic deployment model. We plan to file provisional patents on the first two in Months 2--3 to establish our priority date, and protect the configuration and workflow logic as trade secrets. The underlying open-source tools are free to use -- what's proprietary is our specific integration architecture, our clinical logic, our workflow templates, and our trained ML models. That's the IP."
+```
+
+**Severity: MEDIUM** -- the current wording asserts all three are "patentable innovations," which overstates the defensibility of Claim #3.
 
 ---
 
-### Section 2: Technical Architecture (Lines 28-97)
+## 3. Modular Service Tiering Review (Section 2.4)
 
-**Strengths:**
-- The stack description (Lines 33-41) is clean, specific, and matches the Implementation Guide exactly.
-- The architecture diagram (Lines 47-83) correctly shows the three modules, AI/ML engine, and n8n workflow layer.
-- The "Out of the Box, Then Customize" table (Lines 89-96) is excellent presentation material -- concrete, actionable, and demonstrates deployment maturity.
-- bonFHIR is correctly described as a "community n8n node" -- this matches its actual status.
+### 3.1 Architecture Assessment -- Sound
 
-**Issues:**
+The modular tiering architecture described in Section 2.4 is technically realistic and well-designed:
 
-5. **Line 34: "FedRAMP High authorized, HIPAA BAA, ITAR-compliant"** -- Amazon GovCloud is FedRAMP High authorized and does offer HIPAA BAAs. The ITAR claim is also correct. However, the platform itself is not FedRAMP High authorized just because it runs on GovCloud. The infrastructure is FedRAMP High; the application inherits some controls but is not itself FedRAMP authorized. This distinction matters for a healthcare-savvy audience. In Section 7 (Line 231), the Q&A answer correctly says "runs on Amazon GovCloud -- FedRAMP High authorized" -- the "runs on" framing is accurate. But in Section 4.2 (Line 169), the comparison table says "Compliance posture: FedRAMP High (GovCloud)" for the VV platform vs. "FedRAMP Moderate" for Salesforce. This is misleading -- neither the VV platform nor Salesforce Health Cloud are themselves FedRAMP authorized; it is their hosting infrastructure that carries the authorization. Recommend qualifying.
+- Feature flags via `clinic_config` JSONB column is a standard, proven pattern
+- Module activation controlling n8n workflow execution, React dashboard rendering, and FastAPI service gating is architecturally clean
+- "Upgrading a clinic = flipping a flag + deploying pre-built workflow templates" is honest about the upgrade path
 
-**OLD TEXT (Line 169):**
+The Implementation Guide (Section 2.5) provides the technical detail that backs up the Brief's claims. The `modules_enabled JSONB DEFAULT '["compliance"]'` implementation is correct and the Guide's description of how each layer (n8n, React, FastAPI) checks module entitlement is credible.
+
+### 3.2 Tier Pricing -- Reasonable but Needs One Clarification
+
+| Tier | Price Range | Assessment |
+|---|---|---|
+| Essentials ($500--$1,000/mo) | Appropriate for compliance-only. This is a "foot in the door" price for small RHCs with limited IT budgets ($34K--$95K/year). At $500/mo ($6K/year), it is ~7--18% of IT budget -- aggressive but viable given compliance is non-discretionary. |
+| Professional ($1,500--$2,500/mo) | Appropriate for compliance + care. RPM integration justifies the premium because it unlocks CMS reimbursement (99454 + 99457 = ~$104/patient/month). A clinic with 40 RPM patients generates ~$50K/year in new revenue against $18K--$30K/year subscription cost. |
+| Enterprise ($2,500--$4,000/mo) | Appropriate for all three modules. The full revenue unlock ($195K--$267K/year) against $30K--$48K/year subscription cost is the 4--11x ROI story. |
+
+**Issue:** The Brief (Line 276) states "SaaS subscription -- $500 to $4,000 per clinic per month across three tiers, with most clinics expected at the $2,000/month level." But $2,000/month falls in the Professional tier range ($1,500--$2,500). If most clinics are expected at $2,000/month, the business model assumes most clinics adopt Professional or higher. The revenue unlock math ($195K--$267K) is based on Enterprise-level features (RPM billing + CCM billing + MIPS optimization). A Professional-tier clinic that only has compliance + care does not get the full billing automation module and therefore does not unlock the full $195K--$267K. The ROI claim needs to be tier-aware.
+
+**OLD TEXT (Line 276):**
 ```
-| **Compliance posture** | FedRAMP Moderate | **FedRAMP High** (GovCloud) |
-```
-
-**NEW TEXT:**
-```
-| **Compliance posture** | FedRAMP Moderate infrastructure | **FedRAMP High** infrastructure (GovCloud) |
-```
-
-6. **Line 41: "bonFHIR -- Community n8n node providing native FHIR R4 actions and triggers for EHR connectivity"** -- bonFHIR is a real project (Apache 2.0 license). However, as of early 2026, bonFHIR is primarily a React framework and TypeScript SDK for building FHIR applications. There is an n8n community node (`@bonfhir/n8n-nodes-bonfhir`), but its maturity should be verified. The Implementation Guide (Line 32, Line 79) correctly notes it is a "community node" and adds "direct FHIR R4 HTTP calls" as a fallback. The Brief should mirror this fallback language -- if bonFHIR's n8n node is immature, direct HTTP Request nodes in n8n are the real integration path.
-
-**OLD TEXT (Line 41):**
-```
-- **bonFHIR** -- Community n8n node providing native FHIR R4 actions and triggers for EHR connectivity
+"SaaS subscription -- $500 to $4,000 per clinic per month across three tiers, with most clinics expected at the $2,000/month level. At the entry tier, the platform unlocks $195,000 to $267,000 per year in new CMS reimbursement -- an 8--11x return on the clinic's subscription cost.
 ```
 
 **NEW TEXT:**
 ```
-- **bonFHIR** -- Community n8n node providing native FHIR R4 actions and triggers for EHR connectivity, supplemented by n8n HTTP Request nodes for direct FHIR R4 API calls
+"SaaS subscription -- $500 to $4,000 per clinic per month across three tiers. At the Enterprise tier, the platform unlocks $195,000 to $267,000 per year in new CMS reimbursement. Even at the Professional tier, RPM device monitoring alone can generate $50,000 or more in new annual revenue per clinic -- well above the subscription cost.
 ```
 
-7. **Line 43: "VV is currently building a classified gap analysis platform for a defense client on this exact architecture (n8n + PostgreSQL + NGINX + Docker on GovCloud), with a deployment path from unclassified through TS/SCI."** -- This is a strong credibility claim but potentially problematic. If the defense work is classified, Will cannot provide details under questioning. The claim is also hard to verify. The phrase "this exact architecture" is valuable but should be accurate -- is the defense platform really using n8n, or is that an adaptation for the healthcare version? If the defense platform uses a different workflow engine, this claim becomes misleading. Will should be prepared to answer "can you tell us more about that defense project?" honestly.
+**Severity: MEDIUM** -- the current text implies the $195K--$267K revenue unlock applies at the "entry tier," but entry tier (Essentials) has no billing automation or RPM revenue capture.
 
-8. **Line 78: "n8n scheduled workflows aggregating RPM readings + clinician time from PostgreSQL"** -- This is a reasonable architecture. However, the Implementation Guide (Line 77-78) notes that n8n Community Edition handles ~23 req/s in single mode, with the platform needing ~1-5 req/s at peak for 2-3 clinics. This is fine for Phase 1 but the Brief never mentions this throughput ceiling. If a technically savvy panelist asks about scale, Will should know this number.
+### 3.3 Land-and-Expand Logic -- Compelling
 
-9. **Line 97: "Target: clinic live in 2 weeks after initial onboarding meeting."** -- The Implementation Guide's Phase 1 roadmap (Lines 270-276) shows Month 1 for foundation, Month 2 for EHR/RPM integration, Month 3 for billing, and Month 4 for pilot launch. That is 4 months of build before any clinic goes live. The "2 weeks" claim refers to post-build onboarding of additional clinics using the completed platform -- not the initial deployment. This distinction must be crystal clear in the presentation, or it sounds like the platform already exists.
+The progression Essentials -> Professional -> Enterprise is a natural upsell path:
+1. Clinic signs up for compliance automation (pain point: regulatory burden)
+2. Clinic sees compliance working, adds care/RPM module (pain point: care gaps + reimbursement opportunity)
+3. Clinic sees RPM data flowing, adds billing automation (pain point: manual billing processes)
+
+This is a well-constructed SaaS growth motion. The Implementation Guide (Line 307) explicitly targets tracking tier upgrade conversions as a Phase 2 metric. Good.
+
+### 3.4 Technical Concern: Module Independence
+
+The Brief states modules are "independent, composable" (Line 101). However, the "flywheel" description (Section 4.3, Line 200) says "Compliance data feeds care decisions. Care activities generate revenue. Revenue funds better care." If the modules are truly independent, an Essentials-tier clinic should not need care or billing data. But if the flywheel is real, the modules are interdependent -- and an Essentials-tier clinic gets a deliberately incomplete experience.
+
+This is not a flaw in the architecture; it is actually the land-and-expand mechanism working as intended. But Will should be careful not to simultaneously claim "independent modules" and "integrated flywheel" in the same breath. The Essentials tier works standalone for compliance; the flywheel only activates at Enterprise.
+
+**Severity: LOW** -- a narrative framing issue, not a technical one.
 
 ---
 
-### Section 3: VV's Technical Role (Lines 101-145)
+## 4. MVP Scoping Review (Section 6, Phase 1)
 
-#### 3.1 Compliance Module (Lines 103-114)
+### 4.1 Phase 1 Ambition -- Aggressive but Structured
 
-**Strengths:**
-- Table format (Capability / How VV Builds It / Technology) is excellent.
-- Phase markers are correctly applied to UDS (Phase 2) and Regulatory Change Engine (Phase 3).
-- The Michael Jarvis HADRIUS talk-to (Line 114) is the strongest audience-targeted content in the document.
+The Phase 1 roadmap (Line 240) promises: "All 3 service tiers shippable: Essentials (compliance), Professional (+ care/RPM), Enterprise (+ billing). Provisional patent filed. 2--3 Virginia RHCs live across tiers."
 
-**Issues:**
+The Implementation Guide's month-by-month breakdown (Lines 298--303) maps this as:
+- Month 1: Foundation + Essentials tier shippable
+- Month 2: Professional tier shippable
+- Month 3: Enterprise tier shippable
+- Month 4: Pilot launch, 2--3 clinics live
 
-10. **Line 114: "it's designed to predict where a clinic is at risk of falling out of compliance 60--90 days in advance"** -- Good that this has been softened to "designed to predict." However, no validation data exists for this claim. The Implementation Guide does not describe a compliance prediction model anywhere -- the compliance module is a task tracker with reminders (Lines 141-147), not a predictive system. The "60-90 days in advance" prediction would require historical compliance failure data that does not exist yet. This claim should be further softened or reframed as a Phase 2+ aspiration.
+**Assessment:** This is ambitious for a single developer (Will, 40 hrs/week) but structured correctly. Each month delivers one tier increment, building on the prior month's work. The key risk is not scope but sequencing -- if Month 1 foundation work takes longer than expected (GovCloud provisioning, EHR developer program approval, FHIR integration), everything shifts right.
 
-**OLD TEXT (Line 114):**
+### 4.2 "Shippable" vs. "Production-Ready"
+
+The word "shippable" in the Phase 1 roadmap is carefully chosen (not "production-ready" or "complete"). This is the right word for an MVP. However, the Brief's Phase 1 description could be misread by a panelist as "finished product." Will should be prepared to explain: "Shippable means a clinic can use it, see value from it, and we can measure outcomes. It does not mean feature-complete. Phase 2 hardens and enriches each tier."
+
+### 4.3 The "At Least 1 Clinic on Each Tier" Goal
+
+The Implementation Guide (Line 303) says: "at least 1 on each tier to validate tiering model." This is an important validation goal but operationally questionable. In a 4-month Phase 1 with 2--3 pilot clinics:
+
+1. **Finding one clinic willing to pay $500/month for compliance-only** (Essentials) while another pays $2,500--$4,000/month for full Enterprise during a pilot is unlikely. Pilot clinics typically get free or heavily discounted access.
+2. **If pilot clinics are not paying, tier validation is theoretical.** You can demonstrate the feature flags work and the module activation works, but you are not validating willingness to pay at each tier.
+3. **A stronger validation would be:** Deploy all clinics at Enterprise (full capability) and measure which modules each clinic actually uses. Usage data reveals natural tier segmentation better than assigning tiers.
+
+**Recommendation:** Will should be prepared for the question "are pilot clinics paying?" If the answer is no (likely), the tier validation story should be: "We deploy full capability and measure which modules drive the most value. That usage data validates our tier structure."
+
+**Severity: LOW** -- this is a pilot design question, not a document error.
+
+### 4.4 Patent Filing in Phase 1
+
+Line 240 includes "Provisional patent filed" as a Phase 1 deliverable. The Implementation Guide (Line 300) places this in Month 1 ("File provisional patent application on unified 3C architecture"). But the Guide's Next Steps (Line 574) says "Engage patent attorney for provisional patent application" at Week 4--6, and filing requires the attorney to draft the application after understanding the architecture.
+
+**Timeline reality:** Engage attorney (Week 4--6) + attorney reviews architecture and drafts provisional (2--4 weeks) = filing at Week 8--10 (Month 2--3). The Guide's Section 9.3 (Line 467) says "Months 2--3" for filing. But the Month 1 sprint table says patent filing is a Month 1 deliverable. These are inconsistent within the Guide itself.
+
+**OLD TEXT in Brief (Line 240, Phase 1 row):**
 ```
-Our platform doesn't just track compliance status; it's designed to predict where a clinic is at risk of falling out of compliance 60--90 days in advance based on trending data, staffing changes, and regulatory calendar analysis.
+| **Phase 1: MVP** *(VIPC Grant)* | Months 1--4 | All 3 service tiers shippable: Essentials (compliance), Professional (+ care/RPM), Enterprise (+ billing). Provisional patent filed. 2--3 Virginia RHCs live across tiers |
 ```
 
 **NEW TEXT:**
 ```
-Our platform doesn't just track compliance status; it monitors trending data, staffing changes, and regulatory calendars to flag compliance risks before they become violations. As we accumulate clinic data during the pilot, we'll build the predictive models that can forecast risk 60--90 days in advance.
+| **Phase 1: MVP** *(VIPC Grant)* | Months 1--4 | All 3 service tiers shippable: Essentials (compliance), Professional (+ care/RPM), Enterprise (+ billing). Provisional patent applications filed (Months 2--3). 2--3 Virginia RHCs live across tiers |
 ```
 
-#### 3.2 Care Module (Lines 118-131)
-
-**Strengths:**
-- The RPM integration story maps directly to CMS reimbursement -- the revenue justification is built into the care narrative.
-- Both the Michael Jarvis talk-to (Line 129) and Tai Mai talk-to (Lines 131) are well-crafted.
-- SHAP values and AUC-ROC targets are now included in the Tai Mai talk-to -- excellent for a physician/scientist.
-
-**Issues:**
-
-11. **Line 129: "$100--$180/month in CMS reimbursement (CPT 99454 at $52 plus 99457 clinician time at $52, with additional billing for extended management)"** -- The Implementation Guide (Lines 188-201) shows 99454 at $52.11 and 99457 at $51.77, totaling $103.88. To reach $180, you need at least one additional 99458 ($41.42) bringing the total to $145.30, or two 99458 units ($186.72). The "$100-$180" range is defensible but the parenthetical math ("$52 plus $52") only explains the bottom of the range. This is acceptable as-is but Will should know the components if challenged.
-
-12. **Line 129: "We use cellular-connected devices so they work for rural patients without WiFi."** -- This is a strong point that correctly matches the Implementation Guide's device strategy (Lines 106-117). No issue here -- noting it as a positive correction from what appears to have been a consumer-device-centric earlier draft.
-
-13. **Line 131: "Phase 1 targets AUC-ROC above 0.75 with sensitivity above 80% for the highest-risk decile"** -- These are reasonable Phase 1 targets for a model trained on CMS public use files. However, the phrase "highest-risk decile" combined with "sensitivity above 80%" needs clarification. Sensitivity of 80% for the top decile means that among all patients who are actually hospitalized/visit the ER within 90 days, 80% of them are in the top-scoring 10% of the model. This is ambitious but not unreasonable for a well-constructed model with strong predictors. Will should be prepared to explain what "sensitivity for the top decile" means if Tai Mai asks -- she will understand the terminology.
-
-#### 3.3 Collect Cash Module (Lines 135-145)
-
-**Strengths:**
-- RPM/CCM billing capture correctly describes the 16-day threshold for 99454 and 20-minute threshold for 99457/99458.
-- Phase markers (Phase 2, Phase 3) are correctly applied to Coding Optimization and Denial Prevention.
-- The MIPS weight breakdown (Quality 30%, Cost 30%, PI 25%, IA 15%) matches CMS 2026 MIPS.
-
-**Issues:**
-
-14. **Line 144: MIPS weights "Quality (30%), Cost (30%), PI (25%), IA (15%)"** -- These weights are for CY 2025 MIPS. CMS has been adjusting these weights annually. For CY 2026, the proposed rule may change them. The weights listed are the most recent finalized weights and are likely to remain close. This is acceptable but Will should note "based on current CMS MIPS methodology" if challenged.
+**Severity: LOW** -- minor timeline clarification.
 
 ---
 
-### Section 4: Technical Differentiators (Lines 148-181)
+## 5. Cross-Document Consistency (Brief vs. Guide, Version 3.0)
 
-**Strengths:**
-- The DoD-to-rural-health translation table (Lines 152-160) is genuinely compelling. "AI triage classification in austere environments" mapping to "AI risk stratification for underserved rural populations" is a powerful framing.
-- The comparison table (Lines 164-172) makes a strong case on cost, margins, and control.
-- The competitor list (Lines 176-179) is accurate and well-segmented.
+### 5.1 Issues Resolved from Version 2.0 Review
 
-**Issues:**
+The following inconsistencies from the prior review have been corrected:
 
-15. **Line 155: "DDIL-native architecture (works without connectivity) | Cellular-connected RPM devices for clinics with unreliable broadband"** -- The mapping is somewhat strained. DDIL (Denied, Degraded, Intermittent, Limited) connectivity refers to the platform itself operating offline. Cellular-connected RPM devices are a device-layer choice, not an architecture-layer DDIL capability. The Implementation Guide does not describe any offline capability for the platform itself. If the platform's GovCloud services go down, the system does not function. The DDIL comparison should be reframed honestly.
+| Issue | Status |
+|---|---|
+| Revenue unlock: Brief said $100K--$250K, Guide said $195K--$267K | **FIXED** -- Brief now says $195K--$267K (Line 22) |
+| Per-clinic COGS: Brief said $30--$50, Guide said $100--$150 | **FIXED** -- Brief now says $100--$150 (Line 185) |
+| Gross margin: Brief said 97%+, Guide implied 93--95% | **FIXED** -- Brief now says 93--95% (Line 186) |
+| Total project value: Brief said $200K+, Guide said $194K | **FIXED** -- Brief now says ~$194,000 (Line 258) |
+| "Ships" implying finished product | **FIXED** -- Brief now says "designed as" (Line 12) |
+| bonFHIR missing fallback language | **FIXED** -- Brief now includes "supplemented by n8n HTTP Request nodes" (Line 41) |
+| DDIL mapping strained | **FIXED** -- Brief now says "Architecture designed for unreliable rural broadband" (Line 174) |
+| FedRAMP High framing misleading | **FIXED** -- Brief now says "FedRAMP High infrastructure" (Line 188) |
+| "Logarithmic" scaling overstated | **FIXED** -- Brief now says "sublinearly" (Line 190) |
+| Compliance prediction overclaimed | **FIXED** -- Brief now says "monitors trending data...As we accumulate clinic data...we'll build the predictive models" (Line 133) |
+| ROI range cherry-picked | **PARTIALLY FIXED** -- see Section 5.2 below |
 
-**OLD TEXT (Lines 155):**
-```
-| DDIL-native architecture (works without connectivity) | Cellular-connected RPM devices for clinics with unreliable broadband |
-```
-
-**NEW TEXT:**
-```
-| DDIL-native architecture (works without connectivity) | Architecture designed for unreliable rural broadband: cellular RPM devices bypass clinic WiFi; asynchronous data sync tolerates intermittent connectivity |
-```
-
-16. **Line 166: "Per-clinic COGS: ~$30--50/month (infrastructure)"** -- The Implementation Guide (Line 338) shows per-clinic COGS at 100 clinics as "$100-$150/month," not $30-$50. The $30-$50 figure appears to be the Phase 1 per-clinic infrastructure cost ($750/month divided by 2-3 clinics = $250-$375/clinic), which is actually HIGHER than what is stated. At scale (100 clinics), the Guide says $10K-$15K/month total = $100-$150/clinic. The $30-$50 figure is not supported by either document.
-
-**OLD TEXT (Line 166):**
-```
-| **Per-clinic COGS** | ~$650/month (licenses alone) | ~$30--50/month (infrastructure) |
-```
-
-**NEW TEXT:**
-```
-| **Per-clinic COGS** | ~$650/month (licenses alone) | ~$100--150/month at scale (infrastructure only, no licensing) |
-```
-
-17. **Line 167: "Gross margin at $2K/month: 97%+"** -- If per-clinic COGS is $100-$150/month (not $30-$50), then gross margin at $2K/month is ($2000 - $150) / $2000 = 92.5% to ($2000 - $100) / $2000 = 95%. Still excellent, but not 97%+. At $4K/month, it would be 96-97.5%. The 97%+ claim is only true at the high end of pricing with the low end of COGS.
-
-**OLD TEXT (Line 167):**
-```
-| **Gross margin at $2K/month** | ~67% | **97%+** |
-```
-
-**NEW TEXT:**
-```
-| **Gross margin at $2K/month** | ~67% | **93--95%** (at scale; 97%+ at $4K tier) |
-```
-
-18. **Line 171: "Scale economics: Costs scale linearly per seat (SaaS) vs. Costs scale with infrastructure (logarithmic)"** -- "Logarithmic" is a specific mathematical claim. Infrastructure costs do exhibit sublinear scaling due to shared resources, but "logarithmic" overstates it. The Implementation Guide's scaling table (Lines 330-337) shows costs going from $750/mo (3 clinics) to $10K-$15K/mo (100 clinics) -- that is roughly a 15-20x cost increase for a 33-50x clinic increase. This is sublinear but closer to square-root scaling than logarithmic. Recommend "sublinear" instead.
-
-**OLD TEXT (Line 171):**
-```
-| **Scale economics** | Costs scale linearly per seat | Costs scale with infrastructure (logarithmic) |
-```
-
-**NEW TEXT:**
-```
-| **Scale economics** | Costs scale linearly per seat | Costs scale sublinearly with infrastructure (shared resources across clinics) |
-```
-
----
-
-### Section 5: Market Opportunity (Lines 185-194)
-
-**Strengths:**
-- Virginia/National TAM table is clean.
-- Virginia TAM math is internally consistent (133 x $2K-$4K x 12 = $3.2M-$6.4M).
-
-**Issues:**
-
-19. **Line 192: National TAM "$132M--$264M/year"** -- Let us check: 5,500 RHCs x $2,000/month x 12 = $132M. 5,500 x $4,000 x 12 = $264M. The math checks out. However, there are no FQHCs included in the national TAM, while the Virginia number includes 27 FQHCs. This is inconsistent. If FQHCs are part of the addressable market (and they should be -- there are ~1,400 FQHCs nationally with ~14,000 delivery sites), the national TAM should include them or the Virginia TAM should exclude them. Additionally, no market capture rate is assumed -- this is 100% penetration, which no investor will take seriously. A 5-10% capture rate ($6.6M-$26.4M) would be more credible as a "serviceable obtainable market" (SOM).
-
-20. **Line 193: Revenue Unlock per Clinic "$195K--$267K/year"** -- This is consistent with the Implementation Guide (Line 211). Good. However, this is the BRIEF's number, and Line 22 in the Problem section still says "$100K--$250K." See Issue #4 above.
-
----
-
-### Section 6: Implementation Roadmap (Lines 196-221)
-
-**Strengths:**
-- Three-phase structure now matches the Implementation Guide exactly.
-- Phase 1 timeline (Months 1-4) matches the Guide.
-- Phase 1 deliverables are appropriately scoped.
-- Grant budget allocation matches the Guide line-for-line.
-
-**Issues:**
-
-21. **Line 201: Phase 1 says "2--3 Virginia RHCs live"** -- The Implementation Guide (Line 268) also says 2-3. Consistent. Good.
-
-22. **Line 216: Contingency is $34,000 (68%)** -- The Implementation Guide (Line 318) also shows $34,000 contingency. Consistent. However, 68% contingency in a grant budget will draw scrutiny from Jennifer O'Daniel. The Brief addresses this (Line 221) with the explanation that Will is the developer, eliminating the largest cost. This is a reasonable explanation but Will should be prepared for the question "why not use that $34K to fund additional clinics or hire help?" The Implementation Guide (Line 327) provides a better answer: "add pilot clinics, hire specialized help if needed, or absorb EHR integration surprises." Will should internalize this answer.
-
-23. **Line 219: "Total project value: $200,000+ ($50K VIPC grant + ~$150K+ Will/team sweat equity in-kind)"** -- The Implementation Guide (Line 325) calculates in-kind as ~$144,000 (Will $96K + Cari Ann $12K + Jim $24K + Jessica $12K = $144K), making total project value ~$194,000. The Brief rounds up to "$200,000+" and says "$150K+ sweat equity." These are close enough for a presentation but technically inconsistent.
-
-**OLD TEXT (Line 219):**
-```
-**Total project value:** $200,000+ ($50K VIPC grant + ~$150K+ Will/team sweat equity in-kind)
-```
-
-**NEW TEXT:**
-```
-**Total project value:** ~$194,000 ($50K VIPC grant + ~$144K team sweat equity in-kind: Will at 640 hrs, plus clinical advisory, project management, and compliance expertise)
-```
-
----
-
-### Section 7: Presentation Q&A Prep (Lines 225-258)
-
-**Strengths:**
-- Covers both standard and hard questions -- significant improvement.
-- The "Can you really build all this for $50K?" answer (Line 243) is the single most important answer in the document and it is excellent.
-- The FDA/SaMD answer (Line 257) correctly cites the 21st Century Cures Act and the four CDS exemption criteria.
-- The "What happens if the pilot fails?" answer (Line 254) is well-structured with multiple fallback strategies.
-
-**Issues:**
-
-24. **Line 234: "HL7 FHIR R4 -- the standard CMS mandated for interoperability. We use bonFHIR, a purpose-built FHIR integration library, inside our n8n workflow engine to connect to whichever EHR the clinic runs -- eClinicalWorks, athenahealth, MEDITECH, Azalea Health."** -- Correct EHR list, correct FHIR standard. However, "CMS mandated" is an overstatement. The ONC Cures Act Final Rule and CMS Interoperability rules require certified EHR technology to support FHIR R4 APIs, but CMS did not mandate FHIR R4 for all interoperability. The nuance: CMS mandated that payers provide FHIR-based Patient Access APIs, and ONC required certified EHRs to support standardized FHIR APIs. Saying "the standard ONC and CMS require for interoperability" is more precise. This is a minor point but could matter to Tai Mai.
-
-25. **Line 237: "SaaS subscription -- $2,000 to $4,000 per clinic per month. The platform unlocks $195,000 to $267,000 per year in new CMS reimbursement per clinic. That's an 8--11x ROI."** -- Let us check the ROI math. At $2K/month ($24K/year) unlocking $195K: ROI = $195K / $24K = 8.1x. At $4K/month ($48K/year) unlocking $267K: ROI = $267K / $48K = 5.6x. At $2K/month unlocking $267K: ROI = 11.1x. At $4K/month unlocking $195K: ROI = 4.1x. The "8-11x" range cherry-picks the best combinations ($2K cost / $195K-$267K revenue). The worst case ($4K cost / $195K revenue) yields only 4.1x. This is misleading. The honest range is 4-11x, or the presentable range at the $2K tier is 8-11x with the qualifier.
-
-**OLD TEXT (Line 237):**
-```
-"SaaS subscription -- $2,000 to $4,000 per clinic per month. The platform unlocks $195,000 to $267,000 per year in new CMS reimbursement per clinic. That's an 8--11x ROI.
-```
-
-**NEW TEXT:**
-```
-"SaaS subscription -- $2,000 to $4,000 per clinic per month depending on tier. At the entry tier, the platform unlocks $195,000 to $267,000 per year in new CMS reimbursement -- an 8--11x return on the clinic's subscription cost.
-```
-
-26. **Line 240: "Salesforce Health Cloud licensing alone would consume 17% of the VIPC grant"** -- This is a legacy Salesforce comparison. Let us check: 17% of $50K = $8,500. The Implementation Guide does not mention Salesforce costs. This talking point is still useful for comparison purposes but the 17% figure should be verifiable. Salesforce Health Cloud Enterprise Edition is roughly $300/user/month. For 5 users x $300 x 4 months = $6,000 (12% of grant). With Shield encryption ($150/user/month), that is $450/user/month x 5 users x 4 months = $9,000 (18%). The 17% figure is in the right range but imprecise. Since this is a verbal talking point, the approximation is acceptable. However, the "$150K+/year before serving a single patient" claim should be checked: Salesforce Health Cloud + MuleSoft at enterprise scale could plausibly reach $150K/year, but this is the high end. Recommend "can easily exceed $100K/year" for defensibility.
-
-**OLD TEXT (Line 240):**
-```
-Salesforce Health Cloud licensing alone would consume 17% of the VIPC grant, and at scale it's $150K+/year before serving a single patient.
-```
-
-**NEW TEXT:**
-```
-Salesforce Health Cloud licensing alone could consume 15-20% of the VIPC grant, and at scale, enterprise healthcare SaaS licensing can easily exceed $100K/year before serving a single patient.
-```
-
-27. **Line 240: "clinics with $34K--$95K total IT budgets"** -- This is an important claim about RHC IT budget constraints. No source is cited. HRSA and NACHC publish some data on FQHC operational costs, but RHC-specific IT budget data is harder to find. The range is plausible for small rural practices but should be qualified as "typically" or "estimated" unless Will has a specific source.
-
-28. **Line 257: "The January 2026 FDA CDS guidance update broadens enforcement discretion in our favor."** -- This is a specific regulatory claim about a recent FDA action. If accurate, it is a strong point. Will should be able to cite the specific guidance document title if Tai Mai asks. If this guidance does not exist or has different implications, it would be damaging to cite it. Recommend verifying and having the document title ready.
-
----
-
-### Section 8: Know Your Audience (Lines 261-274)
-
-**Strengths:**
-- Each panelist is profiled with specific investment interests and tailored talking points.
-- The Michael Jarvis "intersection of your two investment themes" line (Line 269) is excellent.
-- Jennifer O'Daniel framing includes grant ROI, Virginia impact, and Series A pipeline.
-
-**Issues:**
-
-29. **Line 265: "$50K from VIPC plus $150K+ in sweat equity"** -- Should be "$144K in sweat equity" per the Implementation Guide's calculation. See Issue #23. Also: "Pilot data positions ACT for Series A by Month 10, funding 4--6 Virginia-based technical roles." -- The Implementation Guide (Lines 297-306) lists 5 team members, not 4-6 new roles. These are the existing team, not new hires. If Will claims the Series A funds 4-6 NEW Virginia technical roles, he needs a hiring plan. The Implementation Guide does not include one for Phase 2 headcount specifically. This claim should either be substantiated or removed.
-
-**OLD TEXT (Line 265):**
-```
-Pilot data positions ACT for Series A by Month 10, funding 4--6 Virginia-based technical roles.
-```
-
-**NEW TEXT:**
-```
-Pilot data positions ACT for a seed or Series A raise by Month 10, enabling ACT to hire Virginia-based technical and implementation staff to support statewide rollout.
-```
-
-30. **Line 273: "97% gross margins on a SaaS with built-in revenue justification for every buyer -- that's the Series A story."** -- Per Issue #17, the actual margin at $2K/month is 93-95% at scale, not 97%. This talking point repeats the inflated number.
-
-**OLD TEXT (Line 273):**
-```
-And 97% gross margins on a SaaS with built-in revenue justification for every buyer -- that's the Series A story.
-```
-
-**NEW TEXT:**
-```
-And 93-95% gross margins on a SaaS with built-in revenue justification for every buyer -- that's the Series A story.
-```
-
----
-
-## 3. Cross-Document Consistency Table
-
-Summary of all inconsistencies between `01_VV_Technical_Brief.md` and `02_Implementation_Guide.md`, prioritized by risk of surfacing during Q&A:
+### 5.2 New or Remaining Inconsistencies
 
 | # | Topic | Brief Says | Guide Says | Severity |
 |---|---|---|---|---|
-| 1 | **Revenue unlock per clinic** | $100K-$250K/year (Line 22) | $195K-$267K/year (Line 211) | HIGH -- two different numbers in the same presentation materials |
-| 2 | **Total in-kind / project value** | "$150K+" / "$200,000+" (Line 219) | $144,000 / $194,000 (Line 325) | MEDIUM -- $6K gap in in-kind, $6K gap in total |
-| 3 | **Per-clinic COGS** | $30-$50/month (Line 166) | $100-$150/month at 100 clinics (Line 338) | HIGH -- 3x difference undermines unit economics story |
-| 4 | **Gross margin** | 97%+ (Lines 167, 269, 273) | Implied 93-95% based on Guide's COGS numbers | MEDIUM -- still excellent margins, but 97% is not supported |
-| 5 | **Pricing tiers** | $2,000-$4,000/month (Line 190) | $500-$4,000/month with 3 tiers (Guide Line 452) | MEDIUM -- Brief omits Starter tier at $500/month |
-| 6 | **ROI claim** | 8-11x (Line 237) | Math shows 4-11x range depending on tier | MEDIUM -- cherry-picked range |
-| 7 | **4-6 Virginia technical roles** | Claimed (Line 265) | No Phase 2 hiring plan in Guide | LOW -- aspirational but unsubstantiated |
-| 8 | **bonFHIR description** | "Community n8n node" only (Line 41) | "Community n8n node + direct FHIR R4 HTTP calls" (Guide Line 32) | LOW -- Brief omits fallback approach |
-| 9 | **Compliance prediction** | "Designed to predict 60-90 days" (Line 114) | No predictive compliance model described; module is task tracker + reminders (Guide Lines 141-147) | MEDIUM -- Brief promises capability not in build plan |
-| 10 | **January 2026 FDA CDS guidance** | Cited (Line 257) | Cited (Guide Line 396) | LOW -- consistent, but verify it exists |
+| 1 | **Number of provisional patents** | "3 provisional patent applications planned" (section title context) and "file provisional patent application(s)" (Line 220) | "File 1--2 provisional patent applications" (Line 467) | MEDIUM -- Brief implies 3, Guide says 1--2. Recommend aligning at 2 per IP analysis above |
+| 2 | **Patent Claim #3 filing timeline** | Listed under "What is patentable" with no phase marker (Line 218) | "Phase 2" (Guide Line 453) | MEDIUM -- Brief implies all 3 are Phase 1 filings; Guide correctly defers Claim #3 to Phase 2 |
+| 3 | **IP table: Patent Claim #2 description** | "Novel combination of clinical risk scoring with automated CMS billing threshold detection" (Line 210) | "Method patent covering automated tracking of device transmission days, clinician time, and mutual exclusivity logic (99445/99454, 99470/99457)" (Guide Line 452) | MEDIUM -- Guide is more specific and accurate. Brief's description conflates risk scoring with billing |
+| 4 | **Patent filing as Month 1 deliverable** | Not explicitly Month 1 in Brief | Guide Sprint 1--2 table (Line 300) says "File provisional patent" in Month 1, but Guide Section 9.3 (Line 467) says "Months 2--3" | LOW -- internal Guide inconsistency; Brief correctly says "Months 2--3" (Line 220) |
+| 5 | **ROI framing** | "8--11x return on the clinic's subscription cost" (Line 276, in Q&A "Revenue model" answer) | Revenue unlock math in Guide (Lines 227--235) assumes Enterprise-tier features (RPM billing + CCM + MIPS) | MEDIUM -- the 8--11x applies at Enterprise pricing, not across all tiers |
+| 6 | **Version number** | Brief footer says "Version 2.0 -- February 24, 2026" (Line 320) | Guide header says "Version: 2.0" (Line 3) | HIGH -- Brief is Version 3.0 per the updates, but the footer was not updated |
+| 7 | **Section numbering in Guide** | N/A | Guide Section 10 "Success Metrics" has subsections labeled "9.1" and "9.2" (Lines 487, 502) | LOW -- Guide internal numbering error (Section 9 renumbered to 10 but subsections not updated) |
+| 8 | **Competitive moat: patent language** | "provisional patent on unified architecture" (Brief Line 200, Section 4.3) | Guide (Line 529) says same | CONSISTENT -- but should be "provisional patents" (plural) per the filing strategy |
+
+### 5.3 Brief Version Footer
+
+**OLD TEXT (Line 320):**
+```
+*Version 2.0 -- February 24, 2026*
+```
+
+**NEW TEXT:**
+```
+*Version 3.0 -- February 25, 2026*
+```
+
+**Severity: HIGH** -- the document will be read by panelists. A version number that does not match the content undermines attention to detail.
 
 ---
 
-## 4. Technical Accuracy Assessment
+## 6. Factual Accuracy Check (New Content)
 
-### Claims That Are Accurate and Strong
+### 6.1 Claims That Are Accurate
 
 | Claim | Assessment |
 |---|---|
-| Amazon GovCloud is FedRAMP High and HIPAA BAA eligible | **Correct.** AWS GovCloud (US) regions are FedRAMP High authorized. |
-| n8n is open-source, self-hostable workflow automation | **Correct.** n8n is source-available (Sustainable Use License for Enterprise, MIT-like for Community). Self-hosting is the standard deployment model. |
-| PostgreSQL 16 with RLS for multi-tenancy | **Correct and well-architected.** RLS is a validated pattern for multi-tenant HIPAA workloads. PGAudit for audit logging is standard. |
-| AES-256 encryption at rest via KMS | **Correct.** RDS encryption uses AES-256 with KMS customer-managed keys. |
-| PGAudit for HIPAA audit logging | **Correct.** PGAudit is the standard PostgreSQL audit extension and is supported on RDS. |
-| n8n Community Edition ~23 req/s in single mode | **Plausible.** This is cited in n8n's documentation for single-instance deployments. Actual throughput depends on workflow complexity. |
-| SHAP values for model interpretability | **Correct.** SHAP (SHapley Additive exPlanations) is the standard approach for XGBoost interpretability. |
-| 21st Century Cures Act CDS exemption (four criteria) | **Correct.** The four criteria under Section 3060(a) are accurately described (Line 257). |
-| CPT 99454 requires 16+ days of data transmission | **Correct.** CMS requires 16 calendar days of data transmission per 30-day period. |
-| CPT 99457 requires 20 minutes of clinician interactive time | **Correct.** |
-| Tenovi: 40+ FDA-cleared devices, single API | **Correct** as of Tenovi's published specifications. |
+| Work-for-hire IP assignment is standard startup structure | **Correct.** Under 17 U.S.C. 101, works created by independent contractors can be work-for-hire if agreed in writing and fall within specified categories, or assigned via IP assignment agreement. The VV-ACT structure is standard. |
+| Provisional patent establishes priority date with 12-month conversion window | **Correct.** 35 U.S.C. 111(b) provides a 12-month window from provisional filing to convert to a non-provisional (utility) application. |
+| $3,000--$5,000 is plausible for provisional patent filing | **Low end but plausible.** USPTO micro entity provisional fee is $320. Attorney drafting for a healthcare method patent typically runs $2,000--$4,000 per application. Two provisionals at this budget is tight (see Section 2.5 above). |
+| Copyright registration for source code | **Correct and recommended.** Copyright registration is not required for protection but is required for statutory damages and attorney fees in infringement suits. Low cost (~$65 per registration). |
+| Feature flags via JSONB in PostgreSQL for module activation | **Correct.** This is a well-established pattern for SaaS feature gating. PostgreSQL JSONB supports efficient querying and indexing. |
+| CMS 2026 codes 99445 and 99470 | **Correct.** CMS finalized these new RPM codes for CY2026 in the November 2025 Physician Fee Schedule final rule. 99445 covers 2--15 days of device data transmission (mutually exclusive with 99454). 99470 covers 10--19 minutes of clinician interactive time (mutually exclusive with 99457). |
 
-### Claims That Are Unsupported or Overstated
+### 6.2 Claims That Need Correction
 
-| # | Claim | Location | Issue | Risk Level |
+| # | Claim | Location | Issue | Severity |
 |---|---|---|---|---|
-| 1 | "Same proven stack VV deploys for defense clients" | Line 12, 43 | Credibility depends on defense project actually using n8n + PostgreSQL. If defense project uses different components, "same stack" is false. Cannot verify from documents. | MEDIUM |
-| 2 | "Designed to predict compliance risk 60-90 days in advance" | Line 114 | No predictive compliance model in the build plan. Module is a task tracker. | MEDIUM |
-| 3 | "$30-$50/month per-clinic COGS" | Line 166 | Contradicted by Guide's own numbers ($100-$150/clinic at scale) | HIGH |
-| 4 | "97%+ gross margin" | Lines 167, 269, 273 | Does not hold at $2K/month with $100-$150 COGS ($2K tier is 93-95%) | MEDIUM |
-| 5 | "Logarithmic" scale economics | Line 171 | Overstates sublinear scaling; Guide's numbers suggest square-root-like scaling | LOW |
-| 6 | "15+ distinct regulatory obligations" | Line 20 | Plausible but unsourced | LOW |
-| 7 | "1 physician per 2,500+ patients in some Virginia counties" | Line 21 | Unsourced; which counties? | LOW |
-| 8 | "$34K-$95K total IT budgets" for RHCs | Line 240 | Unsourced | LOW |
-| 9 | "January 2026 FDA CDS guidance update" | Line 257 | Specific regulatory event -- must be verifiable | MEDIUM |
-| 10 | "$100K-$250K revenue leakage" | Line 22 | Own Implementation Guide calculates $195K-$267K | HIGH |
+| 1 | "3 provisional patent applications planned" | Section title context / overall framing | Only 2 are defensible (see IP analysis). Claim #3 (configuration-driven deployment) is better protected as trade secret | MEDIUM |
+| 2 | Brief IP table (Line 210) describes Patent #2 as "AI risk stratification + billing optimization pipeline" | Line 210 | The patent is about billing threshold detection, not AI risk stratification. Risk stratification is separately listed as a trade secret (Line 212). The IP table conflates two distinct assets | MEDIUM |
+| 3 | "No existing system combines all three for any healthcare segment" | Line 216 | Overstated. Epic Healthy Planet, Athenahealth, and integrated EHR/RCM platforms combine clinical, compliance, and revenue functions -- not identically to 3C, but the "any healthcare segment" claim is too broad for a patent assertion | MEDIUM |
 
-### Claims That Are Technically Correct but Need Nuance
+### 6.3 MIPS Weights Verification
 
-| Claim | Nuance Needed |
-|---|---|
-| "FedRAMP High" as compliance posture (Line 169) | The infrastructure is FedRAMP High; the application is not FedRAMP authorized. |
-| "CMS mandated" FHIR R4 (Line 234) | ONC required certified EHRs to support FHIR R4 APIs; CMS mandated payer Patient Access APIs. More precise: "ONC and CMS require." |
-| "Clinic live in 2 weeks" (Line 97) | After platform is built and base configuration exists. Not from a standing start. |
-| Platform described as "turnkey" (Line 12) | Not yet built. "Designed as turnkey" is more honest. |
+**Brief, Line 163:** "Quality (30%), Cost (30%), PI (25%), IA (15%)"
+
+The CY2025 MIPS weights were Quality 30%, Cost 30%, PI 25%, IA 15%. For CY2026, CMS proposed in the 2026 PFS Proposed Rule adjustments to these weights. The final rule for CY2026 MIPS should be verified -- if CMS changed the weights, this table needs updating. As of the November 2025 final rule, the most likely CY2026 weights remain close to these values. Acceptable as-is but Will should have the CY2026 final rule numbers ready.
+
+**Severity: LOW** -- weights are likely close to correct.
 
 ---
 
-## 5. Missing Critical Information
+## 7. Additional Issues Not Covered in Prior Review
 
-### High Priority (add before presentation)
+### 7.1 "Work-for-Hire" vs. "IP Assignment" Terminology
 
-1. **Correct the revenue unlock number in Section 1.** The $100K-$250K range on Line 22 is contradicted by the Guide's $195K-$267K bottoms-up calculation. Use the defensible number.
+The Brief and Guide use "work-for-hire arrangement" to describe VV's relationship with ACT. Under copyright law, "work for hire" has a specific legal meaning (17 U.S.C. 101). If VV is an independent contractor (not an employee), work-for-hire only applies to certain categories of works (contribution to a collective work, part of a motion picture, etc.). Software does not naturally fall into the work-for-hire categories for independent contractors.
 
-2. **Correct per-clinic COGS and gross margin claims.** The $30-$50/month COGS and 97%+ margin are the most dangerous numbers in the document because they are central to the investment thesis and they are wrong per the team's own Implementation Guide. A sophisticated investor will check this math.
+The more likely correct legal structure is an **IP assignment agreement** -- VV assigns all IP created in the course of the engagement to ACT. The Guide's Next Steps (Line 575) correctly references both: "Execute VV-ACT work-for-hire / IP assignment agreement." This is the right approach (belt and suspenders), but the Brief's repeated use of "work-for-hire" alone could be legally imprecise if VV is structured as an independent contractor.
 
-3. **Add the Implementation Guide's pricing tier structure as a verbal backup.** The Brief shows $2K-$4K/month. The Guide shows $500-$4K/month with 3 tiers. If asked "isn't that expensive for a small RHC?", Will needs to know the $500 Starter tier exists.
+**Recommendation for verbal prep:** If asked, Will should say "work-for-hire and IP assignment agreement" rather than just "work-for-hire." The Implementation Guide already uses this combined language.
 
-4. **Prepare a "What does Phase 1 actually deliver?" one-liner.** The Brief presents the full vision. Will needs a rehearsed 30-second summary: "The $50K grant builds the core platform on GovCloud, deploys to 2-3 Virginia RHCs with HIPAA compliance tracking, EHR integration with one system, RPM device monitoring with billing capture, and AI risk stratification v1. That is the Phase 1 MVP we validate in four months."
+**Severity: LOW** -- unlikely to come up in the presentation, but important for the actual agreement.
 
-### Medium Priority
+### 7.2 Trademark: "3C Platform"
 
-5. **Quantify the "3 Virginia RHCs closing in 2025" claim.** Which clinics? This is a powerful data point that becomes devastating with specifics.
+The Implementation Guide (Line 457) mentions filing an intent-to-use trademark application for "3C Platform." The Brief does not mention trademark strategy. This is a reasonable omission for the presentation -- trademark is less interesting to investors than patents. However, Will should know that "3C" is a common abbreviation in other industries (3C = Computer, Communication, Consumer Electronics in Asian markets) and the trademark application may face office actions based on likelihood of confusion with existing marks. A preliminary trademark search before filing is strongly recommended.
 
-6. **Prepare the Salesforce comparison as a contrast point, not a straw man.** The current "Why not Salesforce" answer (Line 239-240) is strong but includes a specific percentage (17%) that is approximately right. Will should know the exact math if challenged.
+**Severity: LOW** -- not relevant for the presentation.
 
-7. **Health equity framing for Tai Mai.** The rural health disparities data is already in the Brief (Line 21) but is not framed as a health equity argument. A single sentence -- "This is fundamentally a health equity platform" -- would resonate with a physician/scientist evaluator.
+### 7.3 Open-Source License Compliance
 
-### Low Priority
+The Brief mentions n8n Community Edition as "open-source." As of 2024, n8n Community Edition is licensed under the **Sustainable Use License**, not MIT or Apache 2.0. This is a source-available license that restricts use in competing products. ACT's use of n8n for the 3C Platform (a healthcare product, not a workflow automation product) is almost certainly compliant, but the Brief should not call it "open-source" in the strict OSI definition. The current Brief (Line 191) says "open-source stack" and the Guide (Line 27) says "Free (open-source)." These are acceptable shorthand for a presentation but could be challenged by a technically precise audience member.
 
-8. **Team credibility beyond Will.** The Brief mentions "VV's technical lead" but does not describe the broader team. The Guide lists Jim Pfautz (CEO), Cari Ann (clinical), Jessica (compliance). Investors fund teams. A verbal mention of "our clinical advisor validates every workflow" would strengthen the story.
-
-9. **IP discussion.** What is proprietary? The n8n workflows? The ML models? The clinical logic? The React dashboard? All of it is custom code owned by VV, which is the answer -- but Will should be ready to articulate it.
+**Severity: LOW** -- unlikely to come up, but technically imprecise.
 
 ---
 
-## 6. Summary of All Recommended Changes
+## 8. Summary of All Recommended Changes (Version 3.0)
 
-Each change specifies exact old and new text. Line numbers reference `/home/user/AC/VIPC/01_VV_Technical_Brief.md`.
+Each change specifies exact old and new text. Prioritized by severity.
 
-| # | Line(s) | Issue | Severity |
+### HIGH Severity
+
+| # | Location | Issue | Change |
 |---|---|---|---|
-| 1 | 12 | "ships" implies finished product | LOW |
-| 2 | 22 | Revenue unlock inconsistent with Guide ($100K-$250K vs $195K-$267K) | HIGH |
-| 3 | 41 | bonFHIR missing HTTP fallback language | LOW |
-| 4 | 114 | Compliance prediction claim not in build plan | MEDIUM |
-| 5 | 155 | DDIL mapping is strained | LOW |
-| 6 | 166 | Per-clinic COGS wrong ($30-$50 vs Guide's $100-$150) | HIGH |
-| 7 | 167 | Gross margin overstated (97%+ vs 93-95%) | MEDIUM |
-| 8 | 169 | FedRAMP High framing misleading | LOW |
-| 9 | 171 | "Logarithmic" scaling overstated | LOW |
-| 10 | 219 | Total project value inflated vs Guide | MEDIUM |
-| 11 | 237 | ROI range cherry-picked (8-11x vs actual 4-11x) | MEDIUM |
-| 12 | 240 | Salesforce cost comparison approximations | LOW |
-| 13 | 265 | "4-6 Virginia technical roles" unsubstantiated | LOW |
-| 14 | 273 | 97% margin repeated in Tai Mai talking point | MEDIUM |
+| 1 | Line 320 | Version footer not updated | Change "Version 2.0 -- February 24, 2026" to "Version 3.0 -- February 25, 2026" |
 
-### Priority Actions Before Tomorrow
+### MEDIUM Severity
 
-1. **IMMEDIATE (tonight):** Fix revenue unlock number in Section 1 (Change #2). This number is repeated in the presentation and the Guide contradicts it with better math.
-2. **IMMEDIATE (tonight):** Fix per-clinic COGS and gross margin (Changes #6, #7, #14). These are central to the investment thesis and are verifiably wrong against the team's own Implementation Guide.
-3. **IMMEDIATE (tonight):** Fix total project value to match Guide (Change #10). Jennifer O'Daniel will scrutinize grant math.
-4. **HIGH (tonight if time):** Fix ROI range or qualify it (Change #11). Investors will check the math.
-5. **HIGH (tonight if time):** Soften compliance prediction claim (Change #4). Tai Mai will probe AI capabilities.
-6. **MEDIUM (morning prep):** Remaining changes are verbal-prep items Will should internalize.
+| # | Location | Issue | Change |
+|---|---|---|---|
+| 2 | Line 210 | IP table Patent #2 description conflates risk stratification with billing | Change to "Automated RPM/CCM billing threshold detection and revenue optimization pipeline" with description matching the patentability assertion on Line 217 |
+| 3 | Line 216 | Patent Claim #1 is too broad ("any healthcare segment") for a defensible patent assertion | Narrow to specific technical method with bidirectional data flows, not just "three things on one platform" |
+| 4 | Line 220 | Patent filing count ambiguous ("application(s)") vs. Guide's "1--2" vs. implied 3 | Change to "File 2 provisional patent applications" with note that Claim #3 is better as trade secret |
+| 5 | Line 220 | Patent budget is tight for 2 well-drafted provisionals | Change to "$5,000--$7,000" |
+| 6 | Line 276 | ROI framing implies $195K--$267K revenue unlock at entry tier; it only applies at Enterprise | Clarify tier-specific revenue unlock |
+| 7 | Line 296 | Q&A answer asserts all 3 innovations are "patentable"; Claim #3 is weak | Reframe as "protectable innovations" with 2 patent filings + trade secret |
+
+### LOW Severity
+
+| # | Location | Issue | Change |
+|---|---|---|---|
+| 8 | Line 218 | Patent Claim #3 listed without phase marker; should note this is better as trade secret | Add "(protected as trade secret; may be included in patent portfolio if configuration-driven deployment method proves novel)" |
+| 9 | Line 240 | "Provisional patent filed" -- clarify as "Months 2--3" not Month 1 | Change to "Provisional patent applications filed (Months 2--3)" |
+| 10 | General | "Work-for-hire" without "IP assignment" | Verbal prep only -- use combined language if asked |
 
 ---
 
-## 7. What the Brief Gets Right
+## 9. What Version 3.0 Gets Right
 
-To be balanced: this document does several things very well that should not be lost in revision.
+The following additions are strong and should be preserved through any revisions:
 
-1. **The stack migration from Salesforce to n8n/PostgreSQL was the right call.** The open-source stack eliminates the most dangerous objection (licensing costs eating the grant) and makes the "no vendor lock-in" claim honest.
+1. **IP ownership is now crystal clear.** "All IP owned by ACT" is stated in the executive summary, the IP section, and the Q&A. This is essential for a VIPC audience evaluating grant ROI.
 
-2. **The 3C framework is memorable and maps cleanly to real problems.** "Compliance, Care, Collect Cash" is a presentation-ready mnemonic that every panelist will remember.
+2. **The IP table (Section 4.4) correctly categorizes assets by protection type.** Copyright for code, patent for methods, trade secret for models/workflows/rules. This demonstrates IP sophistication that investors respect.
 
-3. **The DoD-to-healthcare translation table is genuinely differentiated.** No other RHC platform vendor can claim GovCloud defense experience.
+3. **The modular tiering is architecturally honest.** Feature flags in a config table controlling n8n workflow execution and React rendering is exactly how modern SaaS products implement tiering. It is not over-engineered and it is not a future aspiration -- it is a design pattern that can be implemented in Sprint 1.
 
-4. **The Q&A section now covers hard questions.** The "What if the pilot fails?" and "FDA regulatory risk?" answers are particularly well-constructed.
+4. **The pricing tiers make business sense.** $500/month Essentials captures clinics that would otherwise be priced out. Enterprise at $2,500--$4,000/month with $195K--$267K revenue unlock is a compelling ROI. The land-and-expand motion (Essentials -> Professional -> Enterprise) is a proven SaaS growth strategy.
 
-5. **The cellular-connected device strategy is clinically appropriate.** Unlike consumer wearables, this addresses the real connectivity challenges of rural patients.
+5. **The patent timeline is practical.** Filing provisionals in Months 2--3 (after the architecture is implemented and documented, not before) is the right sequencing. Converting within 12 months aligns with Phase 2 funding.
 
-6. **The audience-specific talking points demonstrate genuine preparation.** Knowing Michael Jarvis's HADRIUS and OHM investments, and crafting specific angles for each, shows professionalism.
+6. **The open-source vs. proprietary boundary table (in the Guide) is the best single artifact for explaining the IP moat.** Anyone can deploy n8n and PostgreSQL; nobody else has the 3C clinical workflow library. This framing should be ready as a verbal backup.
 
-7. **The contingency explanation is honest and compelling.** "68% contingency because the developer is the founder" is a strength, not a weakness, when framed correctly.
+7. **The "Why 68% contingency?" explanation is now stronger with the patent budget included.** The contingency funds infrastructure, pilot expansion, AND IP protection. This gives the contingency a purpose beyond "buffer."
+
+8. **All numerical corrections from the Version 2.0 review have been applied.** Revenue unlock, COGS, margins, project value, and ROI are now internally consistent between documents. This eliminates the most dangerous presentation risks from the prior version.
 
 ---
 
-*Review completed February 25, 2026. Presentation is tomorrow. Focus on the HIGH-severity numerical corrections tonight -- the narrative and structure are strong.*
+## 10. Pre-Presentation Checklist
+
+### Must-Do Tonight
+
+- [ ] Update version footer (Line 320) to "Version 3.0 -- February 25, 2026"
+- [ ] Tighten Patent Claim #1 language (Line 216) -- narrow from "any healthcare segment" to specific technical method
+- [ ] Fix IP table Patent #2 description (Line 210) to match the actual patent claim
+- [ ] Align patent filing count at 2 (not 3) across Brief and verbal prep
+- [ ] Clarify ROI framing in Q&A revenue model answer (Line 276) -- tier-specific
+
+### Must-Know Verbally (Morning Prep)
+
+- [ ] Will should be able to explain why Claim #3 (configuration-driven deployment) is better as trade secret than patent
+- [ ] Will should say "work-for-hire and IP assignment agreement" if asked about IP structure
+- [ ] Will should know that the VV-ACT IP agreement does not yet exist (Week 1 post-award action)
+- [ ] Will should understand that the revenue unlock math ($195K--$267K) assumes Enterprise-tier features, not Essentials
+- [ ] Will should be prepared for "are pilot clinics paying?" -- if not, tier validation is usage-based, not revenue-based
+- [ ] Will should know the provisional patent budget may need to be $5K--$7K, not $3K--$5K
+
+### Nice-to-Have
+
+- [ ] Fix Guide Section 10 subsection numbering (9.1/9.2 should be 10.1/10.2)
+- [ ] Verify CY2026 MIPS weights against the November 2025 PFS final rule
+- [ ] Prepare a one-sentence answer for "what if someone else files a similar patent first?"
+
+---
+
+## 11. Final Assessment
+
+**Grade: A-**
+
+Version 3.0 is presentation-ready with the targeted corrections above. The IP strategy adds significant credibility for a VIPC audience, the modular tiering demonstrates business model sophistication, and the prior version's numerical errors have all been corrected. The remaining issues are calibration adjustments (narrowing patent claims, aligning filing counts, clarifying tier-specific ROI) rather than structural problems.
+
+The most important thing Will can do between now and tomorrow is internalize the distinction between what is patentable (the specific technical methods in Claims #1 and #2) and what is protectable but not patentable (the configuration-driven deployment model as trade secret). If Tai Mai or Michael Jarvis probes the patent assertions, Will's ability to speak precisely about the IP strategy -- rather than broadly claiming "everything is patentable" -- will demonstrate the kind of technical and legal sophistication that builds investor confidence.
+
+The document's core story is strong: a unified, IP-protected, open-source-based platform solving three interconnected problems for a market nobody else is serving, built by a team with defense-grade infrastructure experience, priced for rural clinic budgets, and structured so ACT owns everything. That story does not need embellishment. It needs precision.
+
+---
+
+*Review completed February 25, 2026. Presentation is tomorrow morning. Focus on the MEDIUM-severity patent claim corrections tonight -- the IP narrative is the new centerpiece of the pitch and it needs to be airtight.*
