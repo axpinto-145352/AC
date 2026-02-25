@@ -116,12 +116,12 @@ The 9-month Phase I is divided into **18 two-week sprints** organized into three
 
 | Sprint | Dates | Primary Focus | Aims Active |
 |---|---|---|---|
-| **S1** | Month 1, Wk 1--2 | Infrastructure + Data Acquisition | 1, 3 |
+| **S1** | Month 1, Wk 1--2 | Infrastructure + Data Acquisition + IRB Protocol Draft | 1, 3 |
 | **S2** | Month 1, Wk 3--4 | Data Model + Feature Engineering | 1, 3 |
-| **S3** | Month 2, Wk 1--2 | Model Training + EHR Integration | 1, 2 |
+| **S3** | Month 2, Wk 1--2 | Model Training + EHR Integration + IRB Submission | 1, 2 |
 | **S4** | Month 2, Wk 3--4 | Model Validation + Device Pipeline | 1, 2 |
-| **S5** | Month 3, Wk 1--2 | IRB Submission + Billing Logic | 2, 3 |
-| **S6** | Month 3, Wk 3--4 | Compliance Module + Consent Workflow | 2, 3 |
+| **S5** | Month 3, Wk 1--2 | Billing Logic + IRB Review Buffer | 2, 3 |
+| **S6** | Month 3, Wk 3--4 | Compliance Module + Consent Workflow + IRB Approval Expected | 2, 3 |
 | **S7** | Month 4, Wk 1--2 | Pilot Clinic Onboarding (Clinic 1) | 1, 2, 3 |
 | **S8** | Month 4, Wk 3--4 | Pilot Go-Live (Clinic 1) + Clinic 2 Prep | 1, 2, 3 |
 | **S9** | Month 5, Wk 1--2 | Pilot Expansion (Clinic 2) + Data Collection | 1, 2, 3 |
@@ -144,13 +144,15 @@ The 9-month Phase I is divided into **18 two-week sprints** organized into three
 - HIPAA BAA executed with AWS
 - CMS public use files downloaded and staged (Medicare Provider Utilization, Chronic Conditions, Hospital Readmissions)
 - Development environment established (n8n, Docker Compose, CI/CD pipeline)
-- IRB protocol draft initiated
+- IRB protocol draft completed (full protocol, consent forms, data management plan)
+- EHR developer program enrollment initiated (eClinicalWorks and/or athenahealth)
 
 **Acceptance Criteria:**
 - [ ] GovCloud infrastructure passes security checklist (encryption at rest, TLS 1.2+, audit logging active)
 - [ ] CMS data files loaded into staging PostgreSQL schema
 - [ ] n8n accessible via HTTPS with authentication
 - [ ] CI/CD pipeline deploys to GovCloud on merge to main
+- [ ] IRB protocol draft reviewed by Co-I and ready for submission
 
 #### Sprint 2 (Month 1, Weeks 3--4): Data Model and Feature Engineering
 
@@ -166,7 +168,7 @@ The 9-month Phase I is divided into **18 two-week sprints** organized into three
 - [ ] Data quality report: completeness, distribution, outlier analysis
 - [ ] PGAudit logging verified for all PHI-containing tables
 
-#### Sprint 3 (Month 2, Weeks 1--2): Model Training and EHR Integration
+#### Sprint 3 (Month 2, Weeks 1--2): Model Training, EHR Integration, and IRB Submission
 
 **Deliverables:**
 - XGBoost model trained on CMS data with 5-fold stratified cross-validation
@@ -174,12 +176,14 @@ The 9-month Phase I is divided into **18 two-week sprints** organized into three
 - SHAP values computed for test set predictions
 - EHR FHIR R4 integration initiated (eClinicalWorks or athenahealth sandbox)
 - bonFHIR n8n node configured for Patient, Condition, Observation, Encounter resources
+- **IRB protocol submitted for expedited review** (4-week review buffer through Sprint 5--6)
 
 **Acceptance Criteria:**
 - [ ] XGBoost cross-validation AUC-ROC documented (target: > 0.70 on CMS data alone)
 - [ ] SHAP summary plot generated showing top-20 feature contributions
 - [ ] FHIR R4 sandbox connection established (read Patient, Condition resources)
 - [ ] Model training pipeline reproducible (versioned data + code + parameters)
+- [ ] IRB protocol submitted with all required documents (protocol, consent forms, DSMP)
 
 #### Sprint 4 (Month 2, Weeks 3--4): Model Validation and Device Pipeline
 
@@ -195,11 +199,12 @@ The 9-month Phase I is divided into **18 two-week sprints** organized into three
 - [ ] Tenovi API returns device readings into PostgreSQL Observation table
 - [ ] n8n RPM ingestion workflow operational on 15-minute polling cycle
 
-#### Sprint 5 (Month 3, Weeks 1--2): IRB Submission and Billing Logic
+#### Sprint 5 (Month 3, Weeks 1--2): Billing Logic + IRB Review Buffer
 
 **Deliverables:**
-- Full IRB protocol submitted for expedited review
+- IRB review in progress (submitted in Sprint 3; respond to any stipulations or revision requests)
 - CMS billing threshold logic implemented in n8n workflows:
+  - CPT 99453: Initial device setup (one-time per patient)
   - CPT 99454: 16-day device transmission tracking
   - CPT 99457/99458: Clinician time tracking (20-min increments)
   - CPT 99490: CCM monthly time tracking
@@ -209,7 +214,7 @@ The 9-month Phase I is divided into **18 two-week sprints** organized into three
 - Billing event data model and auto-generation logic
 
 **Acceptance Criteria:**
-- [ ] IRB protocol submitted with all required documents
+- [ ] IRB review underway; any stipulations addressed promptly
 - [ ] Billing logic passes unit tests against 50+ test scenarios
 - [ ] Billing events correctly generated for simulated RPM data
 - [ ] Mutual exclusivity rules prevent double-billing violations
@@ -430,18 +435,18 @@ The 9-month Phase I is divided into **18 two-week sprints** organized into three
 
 | Month | Personnel | Infrastructure | Devices | Travel | Other | Monthly Total |
 |---|---|---|---|---|---|---|
-| **1** | $21,667 | $1,250 | $0 | $0 | $1,000 | $23,917 |
+| **1** | $21,667 | $750 | $0 | $0 | $1,000 | $23,417 |
 | **2** | $21,667 | $750 | $0 | $0 | $1,500 | $23,917 |
 | **3** | $21,667 | $750 | $3,750 | $750 | $3,000 | $29,917 |
-| **4** | $21,667 | $750 | $0 | $2,250 | $1,500 | $26,167 |
-| **5** | $21,667 | $750 | $0 | $750 | $500 | $23,667 |
-| **6** | $21,667 | $750 | $0 | $0 | $1,000 | $23,417 |
-| **7** | $21,667 | $750 | $0 | $750 | $5,000 | $28,167 |
-| **8** | $21,667 | $750 | $0 | $750 | $500 | $23,667 |
-| **9** | $21,667 | $750 | $0 | $1,250 | $500 | $24,167 |
-| **Total** | **$195,000** | **$7,000** | **$3,750** | **$6,500** | **$14,500** | **$226,750** |
+| **4** | $21,667 | $750 | $0 | $2,250 | $2,000 | $26,667 |
+| **5** | $21,667 | $750 | $0 | $750 | $1,000 | $24,167 |
+| **6** | $21,667 | $750 | $0 | $0 | $1,500 | $23,917 |
+| **7** | $21,667 | $750 | $0 | $1,500 | $5,000 | $28,917 |
+| **8** | $21,667 | $750 | $0 | $1,000 | $1,000 | $24,417 |
+| **9** | $21,667 | $750 | $0 | $1,250 | $1,000 | $24,667 |
+| **Total** | **$195,000** | **$6,750** | **$3,750** | **$7,500** | **$18,000** | **$231,000** |
 
-*Note: Remaining ~$4,250 allocated to indirect costs and contingency. Total with indirect: $256,000.*
+*Note: Subtotal direct costs: $231,000. Indirect costs (10.9% of modified total direct costs, excluding participant support): $25,000. Total: $256,000. Personnel figures shown as flat monthly average; actual expenditure varies by team member effort schedule (see Section 4.1 for individual effort allocations).*
 
 ### 6.2 Key Budget Controls
 

@@ -7,7 +7,8 @@
 **Principal Investigator / Program Director:** Will Nelson
 **Requested Budget:** $256,000 (Direct Costs) over 9 months
 **Proposed Start Date:** October 1, 2026
-**NIH Institute:** National Institute of General Medical Sciences (NIGMS) / National Institute on Minority Health and Health Disparities (NIMHD)
+**NIH Institute (Primary):** National Institute on Minority Health and Health Disparities (NIMHD)
+**NIH Institute (Secondary):** National Institute of General Medical Sciences (NIGMS)
 **Study Section:** Biomedical Computing and Health Informatics (BCHI)
 
 ---
@@ -30,21 +31,21 @@ Rural Health Clinics (RHCs) serve as the primary care safety net for 62 million 
 
 Develop machine learning models (XGBoost ensemble with SHAP-based explainability) trained on CMS public use files and pilot clinic electronic health record (EHR) data to predict 30/60/90-day risk of hospitalization or emergency department visit for rural patients with chronic conditions. **Success criterion:** AUC-ROC > 0.75 with sensitivity > 80% for the highest-risk decile, validated prospectively during the pilot period.
 
-**Hypothesis:** An AI risk stratification model incorporating clinical, social determinant, and utilization data can identify high-risk rural patients with sufficient accuracy to enable targeted preventive interventions, reducing preventable hospitalizations in the pilot population.
+**Hypothesis:** An XGBoost ensemble model incorporating clinical, social determinant, and utilization features will achieve AUC-ROC >= 0.75 and sensitivity >= 80% for the highest-risk decile when predicting 90-day hospitalization or ED visit among rural chronic disease patients, significantly exceeding a logistic regression baseline (paired DeLong test, alpha = 0.05).
 
 ### Aim 2: Build and Pilot an Integrated RPM Data Ingestion and Automated CMS Billing Pipeline
 
 Design and deploy a system that ingests continuous physiological data from cellular-connected RPM devices (blood pressure, glucose, pulse oximetry, weight), detects clinical deterioration trends via temporal analytics, and automatically tracks CMS billing thresholds (16-day transmission minimum for CPT 99454, 20-minute clinician interaction for CPT 99457/99458, CCM time thresholds for CPT 99490). **Success criterion:** Automated capture of > 90% of billable RPM/CCM events across pilot clinics, with a projected revenue increase of $195,000--$267,000 per clinic per year in previously unrealized CMS reimbursement.
 
-**Hypothesis:** An integrated device-to-billing pipeline that automates data ingestion, clinical alerting, and billing threshold tracking can enable resource-constrained RHCs to operate RPM/CCM programs that are financially self-sustaining through CMS reimbursement.
+**Hypothesis:** An automated device-to-billing pipeline will capture >= 90% of billable RPM/CCM events (measured against manual chart review as gold standard), with a false-positive billing event rate < 5%, enabling a statistically significant increase in monthly RPM/CCM revenue per clinic compared to pre-deployment baseline (paired t-test, alpha = 0.05).
 
 ### Aim 3: Design and Evaluate a Unified Compliance-Care-Revenue Data Architecture with Cross-Domain Feedback Loops
 
 Create a shared data model (PostgreSQL with row-level security for multi-tenant clinic isolation) where compliance status, clinical care activities, and revenue cycle data interconnect -- enabling automated identification of how compliance gaps affect reimbursement, how care activities generate billable events, and how revenue trends predict compliance risk. **Success criterion:** Demonstrate at least 3 measurable cross-domain interactions (e.g., compliance documentation completeness correlating with claims acceptance rate) validated in pilot clinic data.
 
-**Hypothesis:** A unified data architecture that captures the interdependencies between compliance, care, and revenue can reveal actionable cross-domain insights not available from siloed point solutions, enabling more effective resource allocation in resource-constrained RHCs.
+**Hypothesis:** A unified data architecture will reveal at least 3 statistically significant cross-domain correlations (Pearson r > 0.3, p < 0.05 after Bonferroni correction for multiple comparisons) between compliance, care, and revenue variables (e.g., compliance task completion rate inversely correlated with claims denial rate) that are not detectable in siloed data systems.
 
-**Impact:** If successful, this Phase I research will demonstrate the feasibility of an integrated AI-driven platform that transforms rural health clinic operations from reactive to proactive. Phase II will expand to 50+ clinics across Appalachian states (Virginia, West Virginia, Kentucky, Tennessee, North Carolina), validate clinical outcome improvements, and prepare for FDA regulatory pathway assessment. The platform addresses NIH priorities in health disparities, rural health, and digital health innovation while creating a commercially viable, scalable solution for a $132M--$264M national market (5,500+ RHCs at $2,000--$4,000/month).
+**Impact:** If successful, this Phase I research will demonstrate the feasibility of an integrated AI-driven platform that transforms rural health clinic operations from reactive to proactive -- addressing health disparities affecting 62 million rural Americans. Phase II will expand to 50+ clinics across Appalachian states (Virginia, West Virginia, Kentucky, Tennessee, North Carolina), conduct an adequately powered prospective clinical outcome study, and prepare for FDA regulatory pathway assessment. The research addresses NIH priorities in health disparities reduction, rural health, digital health innovation, and AI-driven clinical decision support, while validating a scalable approach applicable to 5,500+ Rural Health Clinics nationally.
 
 ---
 
@@ -93,7 +94,7 @@ This research directly aligns with:
 
 #### B.1 Novel Unified Data Architecture (Compliance + Care + Revenue)
 
-The 3C Platform introduces a **patent-pending unified data architecture** where compliance, care, and revenue data share a single PostgreSQL data model with row-level security for multi-tenant clinic isolation. This is technically novel because:
+The 3C Platform introduces a **novel unified data architecture** (provisional patent application planned for filing during Phase I to establish priority date) where compliance, care, and revenue data share a single PostgreSQL data model with row-level security for multi-tenant clinic isolation. This is technically novel because:
 
 - **Cross-domain feedback loops:** Compliance documentation completeness directly affects claims acceptance rates. Care activities (RPM readings, CCM interactions) automatically generate billable events. Revenue trend anomalies (declining reimbursement) trigger compliance risk alerts. No existing system captures these interdependencies.
 - **Configuration-driven multi-tenancy:** A single platform instance serves multiple clinics with different EHRs, device mixes, payer landscapes, and regulatory requirements via feature flags and template workflows -- not separate codebases. This deployment model enables sublinear cost scaling ($100--$150/month infrastructure per clinic at scale vs. $650+/month for enterprise SaaS licensing alone).
@@ -144,7 +145,7 @@ The 3C Platform is built on a proven, production-grade technology stack:
 | **Containerization** | Docker on ECS Fargate | Consistent deployment, horizontal scaling |
 | **Reverse Proxy** | NGINX | TLS 1.2+, HSTS, CSP, rate limiting |
 
-**This is not a prototype stack.** The development team currently builds classified systems for a defense client on this exact architecture (n8n + PostgreSQL + NGINX + Docker on GovCloud), with deployment paths from unclassified through TS/SCI. The 3C Platform applies the same proven components to healthcare.
+**This technology stack is proven in production environments.** The development team currently builds classified systems for a defense client on this exact architecture (n8n + PostgreSQL + NGINX + Docker on GovCloud), with deployment paths from unclassified through TS/SCI. The 3C Platform applies the same proven components to healthcare.
 
 #### C.2 Research Plan -- Aim 1: AI Risk Stratification Engine
 
@@ -174,6 +175,7 @@ The 3C Platform is built on a proven, production-grade technology stack:
 **Phase 2B (Months 3--6): Automated Billing Threshold Tracking**
 
 - **CMS billing logic implementation:**
+  - CPT 99453 (initial RPM device setup): One-time billing at patient enrollment
   - CPT 99454 (RPM device supply/data transmission): Track 16-day minimum per 30-day period
   - CPT 99457 (RPM clinician interaction): Track 20-minute minimum per month
   - CPT 99458 (additional RPM clinician time): Track additional 20-minute increments
@@ -234,15 +236,92 @@ The 3C Platform is built on a proven, production-grade technology stack:
 | **Model performance below AUC threshold** | Low | Pre-trained on CMS data with established predictive signal; fallback to simpler logistic regression model with validated features |
 | **Regulatory changes to RPM billing** | Low | Modular billing rules engine allows rapid adaptation to code changes; CMS trend is toward expanding (not restricting) RPM reimbursement |
 
-#### C.7 Human Subjects Considerations
+#### C.7 Statistical Analysis Plan
 
-This research involves collection and analysis of protected health information (PHI) from pilot clinic patients enrolled in RPM programs.
+**Aim 1 -- Model Validation:**
+- **Primary metric:** AUC-ROC for 90-day hospitalization/ED visit prediction, with 95% confidence intervals computed via bootstrapping (2,000 iterations). Model comparison via paired DeLong test (XGBoost vs. logistic regression baseline, alpha = 0.05).
+- **Sample size justification:** Using the method of Obuchowski (1994), with anticipated AUC = 0.78, prevalence of outcome = 15% (based on CMS readmission data for chronic disease), and desired confidence interval width of +/- 0.05, a minimum of 80 outcome events is required. With 50--100 RPM patients over 5 months of prospective tracking, and an estimated 15% event rate, we expect 8--15 events. **Limitation:** This Phase I sample is underpowered for definitive model validation; the primary endpoint is feasibility demonstration with Phase II providing adequately powered validation across 50+ clinics. CMS public use file pre-training (n > 100,000) provides the statistical foundation; pilot data validates transfer to the clinical deployment context.
+- **Secondary metrics:** Sensitivity, specificity, positive predictive value, calibration (Hosmer-Lemeshow test and calibration curves), Brier score, AUC-PR, and decision curve analysis for clinical utility.
+- **Fairness analysis:** Equalized odds and demographic parity computed per subgroup (age, race/ethnicity, rural isolation quartile). Disparity threshold: absolute difference in TPR or FPR > 0.05 triggers bias review and potential retraining with fairness constraints.
+- **Comparison baselines:** LACE Index (Length of stay, Acuity, Comorbidities, Emergency visits) and HOSPITAL Score as established clinical risk prediction benchmarks.
 
-- **IRB Review:** Full IRB protocol submission prior to pilot clinic deployment (Month 3). Anticipate expedited review as minimal risk research.
-- **Informed Consent:** Two-stage consent: (1) Clinical consent for RPM monitoring; (2) Research consent for de-identified data use in model validation
-- **Data Protection:** All PHI stored in HIPAA-compliant Amazon GovCloud environment with AES-256 encryption, row-level security, and PGAudit logging. De-identified datasets used for model training and validation.
-- **Privacy Risk Mitigation:** PHI access restricted to authorized clinic staff and research team with role-based access controls. Audit trails for all data access. Annual HIPAA Security Risk Assessment.
-- **Vulnerable Populations:** Rural populations may face digital literacy and broadband access barriers. Cellular-connected devices mitigate broadband issues. Clinic staff provide device training in patients' preferred language.
+**Aim 2 -- Billing Pipeline Validation:**
+- **Primary metric:** Billing event capture rate (automated/total billable events identified via manual chart review). Target: >= 90%. Confidence interval via exact binomial test.
+- **Secondary metrics:** False-positive billing event rate (target: < 5%), time savings (automated vs. manual billing identification in staff-hours/month), revenue delta (paired t-test, pre-deployment baseline vs. post-deployment monthly revenue, alpha = 0.05).
+- **Sample size:** With 50--100 patients generating an estimated 3--5 billing events per patient per month, we expect 150--500 billing events per month for accuracy assessment.
+
+**Aim 3 -- Cross-Domain Correlations:**
+- **Primary analysis:** Pearson correlation coefficients with Bonferroni correction for 5 pre-specified cross-domain relationships (corrected alpha = 0.01). Target: at least 3 of 5 achieve r > 0.3 with p < 0.01.
+- **Exploratory analysis:** Interrupted time series analysis (pre/post platform deployment) using segmented regression to assess trend changes in compliance scores, billing capture rates, and clinical outcomes.
+- **Multiple comparison correction:** Bonferroni adjustment for all pre-specified analyses. Exploratory analyses reported with unadjusted p-values and flagged as hypothesis-generating.
+- **Missing data:** Multiple imputation (5 imputations) for covariates missing at random; sensitivity analysis with complete cases.
+
+#### C.8 Data Safety Monitoring Plan
+
+Given that this research involves AI-driven clinical decision support that may influence provider actions, the following safety monitoring plan will be implemented:
+
+- **Safety Monitor:** The Co-Investigator (physician) will serve as the independent Data Safety Monitor, reviewing all clinical alerts, model outputs, and adverse events.
+- **Monitoring frequency:** Monthly during the active pilot period (Months 4--9). Ad hoc review within 24 hours for any serious adverse event.
+- **Adverse event definitions:**
+  - **Serious:** Hospitalization, ED visit, or clinical deterioration that occurred despite the platform generating an alert (system failure) or that was potentially attributable to a false-negative alert (missed risk).
+  - **Non-serious:** False-positive alerts causing unnecessary clinical follow-up; patient anxiety from monitoring; device malfunction.
+- **Reporting:** Serious adverse events reported to IRB within 5 business days and to NIH per reporting requirements. Non-serious events documented in quarterly monitoring reports.
+- **Stopping rules:** The pilot will pause enrollment and undergo full safety review if: (a) any patient death potentially related to platform failure; (b) 3 or more serious adverse events in any 30-day period; (c) false-negative alert rate exceeds 20% (provider-assessed).
+- **Provider authority:** All platform outputs (risk scores, deterioration alerts, billing recommendations) are advisory only. The licensed provider retains full clinical decision authority. The platform does not make autonomous clinical decisions or withhold information from providers.
+
+#### C.9 Preliminary Data
+
+While this proposal describes the Phase I research program, the applicant organization has relevant preliminary data supporting feasibility:
+
+1. **Defense platform deployment:** The development team has successfully deployed the identical technology stack (n8n + PostgreSQL + NGINX + Docker on Amazon GovCloud) for a classified Department of Defense client, validating the infrastructure, security controls, and deployment methodology. This production experience with GovCloud, containerized deployments, and HIPAA-equivalent security controls (NIST 800-171 / CMMC) directly transfers to the healthcare domain.
+
+2. **CMS public use file analysis:** Preliminary analysis of CMS Medicare Provider Utilization data and Chronic Conditions Prevalence files demonstrates the predictive signal available in the training data. Initial XGBoost models trained on CMS hospitalization data achieve AUC-ROC > 0.70 using demographic, diagnostic, and utilization features alone, suggesting that enrichment with EHR clinical data and RPM device data in the pilot will enable the > 0.75 target.
+
+3. **VIPC VVP Launch Grant:** ACT has been selected as a finalist for the Virginia Innovation Partnership Corporation (VIPC) VVP Launch Grant ($50,000), which funds initial MVP development and pilot clinic deployment. If awarded, the VIPC-funded MVP (4-month timeline) will provide a functional platform baseline that the NIH SBIR research builds upon, significantly reducing technical risk for the SBIR Phase I research activities.
+
+4. **Pilot clinic engagement:** Letters of intent have been obtained from Virginia Rural Health Clinics expressing interest in pilot participation, confirming access to the clinical environment, EHR systems, and patient populations required for the research.
+
+#### C.10 References
+
+1. Gong G, Phillips SG, Hudson C, et al. Higher US rural mortality rates linked to socioeconomic status, physician shortages, and lack of health insurance. *Health Affairs*. 2019;38(12):2003-2010.
+2. Hung P, Henning-Smith CE, Casey MM, Kozhimannil KB. Access to obstetric services in rural counties still declining. *Health Affairs*. 2017;36(9):1663-1671.
+3. Noah B, Keller MS, Mosadeghi S, et al. Impact of remote patient monitoring on clinical outcomes: an updated meta-analysis of randomized controlled trials. *NPJ Digital Medicine*. 2018;1:20172.
+4. Chen T, Guestrin C. XGBoost: A scalable tree boosting system. *Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*. 2016:785-794.
+5. Lundberg SM, Lee SI. A unified approach to interpreting model predictions. *Advances in Neural Information Processing Systems*. 2017;30.
+6. Obermeyer Z, Powers B, Vogeli C, Mullainathan S. Dissecting racial bias in an algorithm used to manage the health of populations. *Science*. 2019;366(6464):447-453.
+7. Obuchowski NA. Computing sample size for receiver operating characteristic studies. *Investigative Radiology*. 1994;29(2):238-243.
+8. Centers for Medicare & Medicaid Services. Rural Health Clinic (RHC) Center. 2025. Accessed February 2026.
+9. Douthit N, Kiv S, Dwolatzky T, Biswas S. Exposing some important barriers to health care access in the rural USA. *Public Health*. 2015;129(6):611-620.
+10. Kvedar JC, Coye MJ, Everett W. Connected health: a review of technologies and strategies to improve patient care with telemedicine and telehealth. *Health Affairs*. 2014;33(2):194-199.
+
+#### C.11 Human Subjects Considerations
+
+This research involves collection and analysis of protected health information (PHI) from pilot clinic patients enrolled in RPM programs. The research qualifies for expedited IRB review as minimal risk (no intervention beyond standard-of-care RPM monitoring).
+
+**a) Risks to Subjects:**
+- **Privacy risk:** Collection and storage of PHI including vital signs, diagnoses, and demographic data. Mitigated by HIPAA-compliant Amazon GovCloud infrastructure with AES-256 encryption, row-level security, and PGAudit logging.
+- **Clinical risk (minimal):** AI risk scores and deterioration alerts are advisory only -- all clinical decisions remain with the licensed provider. False positive alerts may cause unnecessary follow-up; false negatives are mitigated by maintaining existing care protocols alongside the platform.
+- **Digital equity risk:** Participants may face digital literacy barriers. Mitigated by zero-configuration cellular devices and clinic staff-assisted enrollment.
+
+**b) Adequacy of Protection Against Risks:**
+- **IRB Review:** Full IRB protocol submission prior to pilot clinic deployment (Month 3). Anticipate expedited review under 45 CFR 46.110 Category 7 (research on individual or group characteristics).
+- **Informed Consent:** Three-stage consent process: (1) Clinical consent for RPM monitoring; (2) Medicare-specific consent for RPM billing; (3) Research consent for de-identified data use in model validation. Consent forms in plain language at 6th-grade reading level. Participants may withdraw at any time without affecting their clinical care.
+- **Data Protection:** All PHI stored in HIPAA-compliant Amazon GovCloud (FedRAMP High). AES-256 encryption at rest, TLS 1.2+ in transit, PostgreSQL row-level security for clinic isolation, PGAudit for complete audit trails. De-identified datasets (HIPAA Safe Harbor method) used for model training, validation, and publication.
+- **PHI access restricted** to authorized clinic staff and research team with role-based access controls. Audit trails for all data access. Annual HIPAA Security Risk Assessment per NIST SP 800-66.
+- **Data Safety Monitoring:** Quarterly data safety review by PI and Co-Investigator. Adverse event reporting to IRB within 5 business days (serious) or at next continuing review (minor). Protocol deviation documentation and reporting per IRB requirements.
+
+**c) Potential Benefits:**
+- **Direct benefits to participants:** Continuous RPM monitoring between clinic visits, earlier detection of clinical deterioration, proactive care coordination, and potential revenue generation for their clinic (sustaining rural healthcare access).
+- **Benefits to the community:** Validated technology for improving rural health outcomes, reducing preventable hospitalizations, and strengthening rural clinic financial viability.
+
+**d) Importance of Knowledge to Be Gained:**
+The knowledge gained from this research -- validated AI risk stratification for rural populations, demonstrated cross-domain compliance-care-revenue interactions, and proven automated RPM billing capture -- addresses a significant gap in rural health informatics. The potential benefits to 62 million rural Americans served by RHCs outweigh the minimal risks to individual participants.
+
+**e) Inclusion of Women, Minorities, and Children:**
+- **Women:** Expected to constitute approximately 55% of enrolled RPM patients based on rural RHC demographics. No exclusion by sex.
+- **Minorities:** Pilot clinics serve diverse rural populations. Enrollment will reflect clinic demographics. Fairness metrics (equalized odds, demographic parity) will be computed across available race/ethnicity categories to ensure the AI model does not produce disparate predictions.
+- **Children:** Excluded. RPM enrollment targets adult patients (18+) with chronic conditions (hypertension, diabetes, CHF, COPD). Pediatric chronic disease management in RHCs has different clinical protocols and billing rules requiring separate study design.
+- **PHS Inclusion Enrollment Report:** Will be completed and submitted with the application, reflecting projected enrollment demographics based on pilot clinic patient populations.
 
 ---
 
@@ -270,9 +349,10 @@ This research involves collection and analysis of protected health information (
 | Legal (HIPAA BAA templates, pilot agreements, IRB) | $5,000 |
 | Provisional patent filing (patent attorney + USPTO fees) | $5,000 |
 | Software and monitoring tools | $2,000 |
-| Participant support (patient device training materials) | $2,000 |
+| Participant support costs (patient device training materials) | $2,000 |
 | **Subtotal Direct Costs** | $231,000 |
-| **Indirect Costs (estimated 10.8% -- small business rate)** | $25,000 |
+| *Note: Participant support costs ($2,000) are excluded from indirect cost base per NIH policy* | |
+| **Indirect Costs (estimated 10.9% of modified total direct costs)** | $25,000 |
 | **TOTAL** | **$256,000** |
 
 ### Budget Justification
@@ -287,7 +367,7 @@ This research involves collection and analysis of protected health information (
 
 **AWS GovCloud Infrastructure ($6,750):** ECS Fargate (containerized compute), RDS PostgreSQL (database), S3 (object storage), KMS (encryption key management), CloudTrail (audit logging). FedRAMP High authorization provides the highest commercially available security posture for HIPAA-regulated workloads. Estimated $750/month at pilot scale with 2--3 clinics.
 
-**RPM Devices ($3,750):** 25 cellular-connected devices (blood pressure cuffs, glucose monitors, pulse oximeters, scales) from Tenovi at approximately $100--$150 per unit at pilot pricing. Cellular connectivity is critical for rural patients without reliable WiFi. Devices remain with patients during the pilot period.
+**RPM Devices ($3,750):** 25 cellular-connected devices (blood pressure cuffs, glucose monitors, pulse oximeters, scales) from Tenovi at approximately $150 per unit at negotiated pilot pricing. Cellular connectivity is critical for rural patients without reliable WiFi. Devices remain with patients during the pilot period.
 
 **Provisional Patent ($5,000):** Filing provisional patent application(s) covering: (1) the unified compliance-care-revenue platform architecture; (2) the automated RPM/CCM billing threshold detection pipeline; (3) the configuration-driven multi-tenant clinic deployment model. Establishing priority date during Phase I protects commercialization pathway for Phase II.
 
@@ -332,6 +412,60 @@ Veteran Vectors (VV) will serve as the technical development subcontractor under
 
 The PI (Will Nelson) serves in dual capacity as ACT principal investigator and VV technical lead, ensuring alignment between research objectives and technical execution.
 
+**SBIR Work Performance Requirement:** A minimum of 67% of the research effort (measured by direct costs for personnel and other direct costs attributable to the applicant organization) will be performed by Authentic Consortium (ACT) and its affiliated personnel. VV operates as a subcontractor under ACT's direction; the combined ACT/VV effort constitutes the applicant organization's performance. This arrangement satisfies the SBIR Phase I minimum work requirement per SBA regulations (13 CFR 121.702).
+
+---
+
+## SBIR ELIGIBILITY
+
+Authentic Consortium (ACT) certifies that it meets all SBIR eligibility requirements:
+
+- **Small Business Concern:** ACT is a Virginia-registered small business with fewer than 500 employees, meeting the SBA size standard for SBIR eligibility.
+- **U.S. Ownership and Control:** ACT is majority-owned and controlled by U.S. citizens or permanent residents.
+- **Principal Place of Performance:** All research will be performed in the United States.
+- **67% Work Performance (Phase I):** A minimum of 67% of research effort will be performed by the applicant organization (ACT and its affiliated technical team).
+- **SBIR/STTR Funding Agreement Certification:** ACT will execute the required SBIR Funding Agreement Certification at the time of award.
+
+---
+
+## VERTEBRATE ANIMALS
+
+Not applicable. This research does not involve vertebrate animals.
+
+---
+
+## INCLUSION OF WOMEN AND MINORITIES
+
+This research will enroll adult patients with chronic conditions (hypertension, diabetes, CHF, COPD) at pilot Rural Health Clinics in Virginia. Enrollment will reflect the demographic composition of the pilot clinic patient populations.
+
+**Expected enrollment demographics** (based on Virginia rural RHC population data):
+- **Sex/Gender:** Approximately 55% female, 45% male. No exclusion by sex or gender.
+- **Race/Ethnicity:** Enrollment will reflect pilot clinic demographics. Virginia rural populations include significant representation of non-Hispanic White, non-Hispanic Black, and Hispanic/Latino populations. No exclusion by race or ethnicity.
+- **Recruitment:** Clinic staff will identify eligible patients (chronic disease diagnosis, provider recommendation for RPM) and offer enrollment regardless of sex, race, or ethnicity. Recruitment materials will be available in English and Spanish.
+- **Analysis:** Model performance (AUC-ROC, sensitivity, fairness metrics) will be stratified by sex and available race/ethnicity categories. Any disparities exceeding predefined thresholds (equalized odds difference > 0.05) will be investigated, documented, and addressed through model retraining with fairness constraints.
+- **PHS Inclusion Enrollment Report:** Will be submitted with the application reflecting projected enrollment demographics.
+
+---
+
+## INCLUSION OF CHILDREN
+
+Children (individuals under 18 years of age) are **excluded** from this research. Justification:
+
+1. **Clinical scope:** The RPM program targets adult chronic conditions (hypertension, Type 2 diabetes, CHF, COPD) that are predominantly adult-onset diseases. Pediatric chronic disease management involves different clinical protocols, medication regimens, and monitoring thresholds.
+2. **CMS billing:** RPM/CCM billing codes (CPT 99453, 99454, 99457, 99458, 99490) apply to Medicare beneficiaries, who are predominantly adults aged 65+. Pediatric RPM billing follows different pathways (Medicaid EPSDT) requiring separate platform logic.
+3. **IRB considerations:** Inclusion of children would require additional consent procedures (parental consent, child assent) and pediatric-specific safety monitoring that are outside the scope of this Phase I feasibility study.
+4. **Phase II consideration:** Pediatric chronic disease management in rural settings may be addressed in Phase II or subsequent research if Phase I demonstrates feasibility of the adult platform.
+
+---
+
+## OTHER SUPPORT
+
+*(To be completed at time of submission with current and pending support for all Senior/Key Personnel)*
+
+**Will Nelson (PI):**
+- **Active:** VIPC VVP Launch Grant (if awarded), $50,000, March 2026 -- June 2026. Role: PI/Technical Lead. Scope: MVP development of 3C Platform for 2--3 Virginia RHC pilots. *Overlap assessment:* The VIPC grant funds initial platform MVP development (4 months) and is expected to conclude before the NIH SBIR start date (October 2026). The NIH SBIR Phase I builds upon the VIPC-funded platform baseline to conduct formal research validation. No overlap in effort or scope.
+- **Pending:** This NIH SBIR Phase I application, $256,000, October 2026 -- June 2027.
+
 ---
 
 ## LETTERS OF SUPPORT
@@ -354,6 +488,44 @@ The PI (Will Nelson) serves in dual capacity as ACT principal investigator and V
   - Clinical decision support design patterns for rural health applications
 - **Data:** De-identified, aggregated pilot data will be deposited in an appropriate NIH-designated repository within 12 months of study completion, consistent with NIH Data Sharing Policy and HIPAA de-identification standards (Safe Harbor method).
 - **Publications:** Research findings will be submitted for publication in peer-reviewed journals (target: JAMIA, Journal of Rural Health, npj Digital Medicine) within 12 months of Phase I completion.
+
+---
+
+## DATA MANAGEMENT AND SHARING PLAN
+
+Per the NIH Data Management and Sharing Policy (effective January 25, 2023), this plan describes how scientific data generated during this project will be managed and shared.
+
+### Data Types and Scope
+
+| Data Type | Format | Volume | Sharing Applicability |
+|---|---|---|---|
+| CMS public use files (training data) | CSV/Parquet | ~5 GB | Already public; no sharing required |
+| EHR clinical data (pilot clinics) | FHIR R4 JSON | ~500 MB/clinic | PHI -- share de-identified only |
+| RPM device readings | JSON/PostgreSQL | ~100 MB/month | PHI -- share de-identified only |
+| AI model performance metrics | CSV/JSON | ~50 MB | Shareable (no PHI) |
+| Cross-domain correlation analyses | CSV/JSON | ~10 MB | Shareable (aggregate, no PHI) |
+| Billing event data | PostgreSQL | ~10 MB/month | PHI -- share de-identified only |
+| Trained model weights | Binary (pickle/ONNX) | ~100 MB | Trade secret -- not shared |
+
+### De-identification Method
+
+All shared datasets will be de-identified using the **HIPAA Safe Harbor method** (45 CFR 164.514(b)(2)), removing all 18 categories of identifiers. Date shifting (random offset per patient, preserving intervals) will be applied to temporal data. Geographic data will be generalized to state level.
+
+### Repository and Timeline
+
+- **Primary repository:** NIH-designated repository (NCBI dbGaP for controlled-access clinical data; Zenodo or Dryad for model performance data and analysis code)
+- **Timeline:** De-identified datasets deposited within 12 months of Phase I completion; updated with Phase II data as generated
+- **Access:** Model performance metrics and aggregate cross-domain analyses available under open access. De-identified clinical data available via controlled access through dbGaP with DUA requirement.
+- **Metadata:** All datasets accompanied by data dictionaries, codebooks, and methodology documentation sufficient for independent analysis.
+
+### Data Preservation
+
+- **Active project:** All data stored in HIPAA-compliant Amazon GovCloud with automated backups, 30-day snapshot retention, and cross-region replication
+- **Post-project:** De-identified research datasets preserved in designated repository for minimum 10 years. PHI destroyed via cryptographic erasure (KMS key deletion) within 6 months of project closure, per HIPAA retention requirements and clinic agreements.
+
+### Oversight
+
+The PI will be responsible for implementing this DMS Plan. Compliance will be reviewed at each quarterly progress report.
 
 ---
 
