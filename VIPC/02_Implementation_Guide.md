@@ -29,7 +29,7 @@ This is the engineering and business execution plan for the **3C Platform** -- a
 | **API / ML** | Python 3.11 + FastAPI | ML model serving (risk stratification), high-frequency RPM data ingestion, FHIR data transforms | Free (open-source) |
 | **Frontend** | React / Next.js | Clinic dashboard: Patient 360, compliance tracker, billing tracker, MIPS dashboard, RPM data display | Free (open-source) |
 | **Reverse Proxy** | NGINX | TLS 1.2+ termination, HSTS, CSP headers, rate limiting | Free (open-source) |
-| **FHIR Integration** | bonFHIR (n8n community node) + direct FHIR R4 HTTP calls | Native FHIR R4 actions and triggers for EHR connectivity | Free (Apache 2.0 license) |
+| **FHIR Integration** | bonFHIR n8n node (@bonfhir/n8n-nodes-bonfhir) + direct FHIR R4 HTTP calls | Native FHIR R4 actions and triggers for EHR connectivity | Free (Apache 2.0 license) |
 | **Containers** | Docker + ECS Fargate | Containerized deployment. Same delivery model as VV defense deployments | Included in GovCloud hosting |
 | **Security** | AWS KMS + PGAudit + CloudTrail + application-level field encryption | AES-256 at rest, TLS 1.2+ in transit, HIPAA audit logging, PHI field encryption | KMS: ~$1/key/month; rest included |
 | **Monitoring** | CloudWatch + CloudWatch Logs | Application performance, error tracking, HIPAA log archival | Included in GovCloud |
@@ -75,10 +75,11 @@ This is the engineering and business execution plan for the **3C Platform** -- a
 
 **Key MVP decisions:**
 - **Hybrid ingestion pattern.** Python/FastAPI service handles high-frequency RPM device data polling (Tenovi/Smart Meter APIs). n8n handles workflow orchestration on top -- alert routing when thresholds are exceeded, billing event generation, care gap detection. This split is based on production architecture research: n8n excels at workflow orchestration but dedicated services are more robust for high-frequency data ingestion
-- **n8n Community Edition is sufficient for Phase 1.** Throughput: ~23 req/s single mode. Our load: ~1--5 req/s at peak with 2--3 clinics. Queue mode (Enterprise) is a Phase 2 upgrade path when scaling to 10+ clinics
+- **n8n Community Edition is sufficient for Phase 1.** Throughput: ~15--23 req/s single mode depending on instance size (n8n benchmarks show ~15 req/s stable on smaller instances; ~23 req/s on larger instances with elevated failure rates). Our load: ~1--5 req/s at peak with 2--3 clinics -- well within single-mode capacity. Queue mode (Enterprise or self-hosted with Redis) is a Phase 2 upgrade path when scaling to 10+ clinics
 - **bonFHIR for FHIR integration.** Purpose-built n8n community node (Apache 2.0) providing native FHIR R4 actions and triggers. Chosen specifically because it was designed for self-hosted HIPAA-compliant n8n deployments
 - **PostgreSQL row-level security for multi-tenancy.** Each clinic is a tenant. RLS policies enforce data isolation at the database level -- not just application code. PGAudit logs every query against PHI tables. This pattern is validated by AWS reference architectures and HIPAA compliance guidance
-- **Application-level field encryption for sensitive PHI.** AES-256 via AWS KMS envelope encryption on SSN, diagnosis codes, treatment notes. Provides breach safe harbor under HIPAA Breach Notification Rule -- encrypted data is "unreadable, unusable, and indecipherable"
+- **n8n Community Edition HIPAA access control gap.** Community Edition lacks SSO/LDAP and RBAC (Enterprise-only features). Phase 1 mitigation: restrict n8n UI access to VV engineering team only via VPN + NGINX IP allowlisting. All clinic staff interact exclusively through the React frontend, which implements application-level RBAC. n8n processes PHI in workflows but no clinic user directly accesses the n8n interface. Phase 2: evaluate n8n Enterprise or implement external auth proxy (e.g., OAuth2 Proxy) in front of n8n
+- **Application-level field encryption for sensitive PHI.** AES-256 via AWS KMS envelope encryption on SSN, diagnosis codes, treatment notes. Provides breach safe harbor under HIPAA Breach Notification Rule -- encrypted data is "unreadable, unusable, and indecipherable". Performance note: encrypted fields cannot be used in PostgreSQL WHERE clauses without decryption; design queries to filter by non-encrypted fields (patient_id, clinic_id, date ranges) first, then decrypt at the application layer
 
 ### 2.3 EHR Integration Strategy
 
@@ -176,7 +177,7 @@ Patient device (cellular) → Device vendor cloud (Smart Meter / Tenovi)
 | Feature | Implementation | Custom Development | Phase |
 |---|---|---|---|
 | **RPM Billing Tracker** | PostgreSQL table: `billing_events` (clinic_id, patient_id, cpt_code, service_date, status). n8n nightly workflow: count transmission days per patient → flag billable when ≥16 days (99454) or ≥2 days (99445 new 2026 code). Track clinician time for 99457/99458/99470 | n8n workflows + React billing dashboard | Phase 1 |
-| **CCM Time Tracking** | PostgreSQL table: `ccm_activities` (patient_id, clinician_id, activity_type, duration_minutes, date). React timer component for real-time capture. n8n workflow: when cumulative minutes ≥20, flag for 99490 ($66.30). Track complex CCM (60 min) for 99487 (~$131.65) | React timer component + n8n billing logic | Phase 1 |
+| **CCM Time Tracking** | PostgreSQL table: `ccm_activities` (patient_id, clinician_id, activity_type, duration_minutes, date). React timer component for real-time capture. n8n workflow: when cumulative minutes ≥20, flag for 99490 ($66.30). Track complex CCM (60 min) for 99487 (~$144.29) | React timer component + n8n billing logic | Phase 1 |
 | **Patient Consent Capture** | React consent form (clinical + Medicare RPM consent). Digital signature capture. Stored in PostgreSQL with audit trail. Required before RPM billing | React consent form UI | Phase 1 |
 | **TCM Workflow** | n8n workflow triggered on discharge notification (ADT feed via FHIR or HL7v2). Auto-creates tasks: contact within 2 days, med reconciliation, visit within 7/14 days. Tracks for 99495/99496 | n8n workflow + hospital ADT integration | Phase 2 |
 | **Coding Optimization** | NLP analysis of clinical notes for missed HCC codes | Python NLP (spaCy + MedCAT) via FastAPI | Phase 2 |
@@ -187,20 +188,20 @@ Patient device (cellular) → Device vendor cloud (Smart Meter / Tenovi)
 
 | CPT Code | Service | 2026 Rate | Billing Threshold |
 |---|---|---|---|
-| 99453 | RPM device setup (one-time) | $22.00 | Initial setup + 2 days monitoring |
+| 99453 | RPM device setup (one-time) | $22.00 | Initial setup + patient education; requires minimum 2 days of monitoring data (2026 rule change -- reduced from prior 16-day requirement) |
 | 99454 | RPM device supply/data (monthly) | $52.11 | 16+ days of data transmission |
-| 99445 | RPM device supply/data (2--15 days) -- NEW 2026 | ~$52.11 | 2--15 days of data (new lower threshold) |
+| 99445 | RPM device supply/data (2--15 days) -- NEW 2026 | ~$52.11 | 2--15 days of data transmission (mutually exclusive with 99454; bill one per 30-day period) |
 | 99457 | RPM first 20 min interactive (monthly) | $51.77 | 20 min clinician time |
 | 99458 | RPM additional 20 min | ~$41.42 | Each additional 20 min beyond 99457 |
-| 99470 | RPM first 10 min interactive -- NEW 2026 | ~$26.05 | 10--19 min clinician time |
+| 99470 | RPM first 10 min interactive -- NEW 2026 | ~$26.05 | 10--19 min clinician time (mutually exclusive with 99457; bill one per calendar month) |
 | 99490 | CCM first 20 min (monthly) | $66.30 | 20 min staff time, 2+ chronic conditions |
 | 99439 | CCM additional 20 min (up to 2x/month) | $50.56 | Each additional 20 min |
-| 99487 | Complex CCM first 60 min (monthly) | ~$131.65 | 60 min staff time, complex needs |
-| 99489 | Complex CCM additional 30 min | $78.00 | Each additional 30 min |
+| 99487 | Complex CCM first 60 min (monthly) | ~$144.29 | 60 min staff time, complex needs |
+| 99489 | Complex CCM additional 30 min | ~$78.16 | Each additional 30 min |
 | 99495 | TCM moderate complexity | $220.00 | Contact within 2 days, visit within 14 days |
 | 99496 | TCM high complexity | $298.00 | Contact within 2 days, visit within 7 days |
 
-**Revenue unlock per clinic (conservative estimate):**
+**Revenue unlock per clinic (target estimate, assumes mature program):**
 Assume 800 Medicare patients, 25% chronic disease prevalence (200 eligible), 40% enrolled RPM (80 patients), 60% enrolled CCM (120 patients):
 
 | Revenue Stream | Patients | Monthly/Patient | Annual Revenue |
@@ -231,6 +232,8 @@ SET app.current_clinic = '42';
 ```
 
 **Why RLS over schema-per-tenant:** O(1) migrations (single schema), simpler connection pooling, scales to hundreds of tenants. HIPAA auditors require demonstrable isolation, not a specific mechanism. RLS + PGAudit provides both isolation and audit proof.
+
+**Security note:** The application database role used by FastAPI/n8n must NOT have superuser or BYPASSRLS privileges. The RDS master user (which bypasses RLS) must be secured separately and never used for application connections. RLS policies do not apply to table owners by default -- use `ALTER TABLE ... FORCE ROW LEVEL SECURITY` if the application role owns PHI tables, or ensure PHI tables are owned by a separate administrative role.
 
 ### 4.2 Core Tables
 
@@ -408,7 +411,7 @@ audit_trail          -- application-level PHI access log (who, what, when)
 |---|---|---|
 | **Compliance** | HIPAA task completion rate | >90% |
 | **Compliance** | MIPS measures tracked | 5+ per clinic |
-| **Care** | Patients enrolled in RPM | 30+ per pilot clinic |
+| **Care** | Patients enrolled in RPM | 15--20 per pilot clinic (30+ across all pilots; constrained by 15--20 pilot devices budgeted) |
 | **Care** | Care gaps identified and addressed | 50+ per clinic |
 | **Care** | Risk model AUC-ROC | >0.75 |
 | **Cost** | New RPM/CCM revenue captured per clinic (monthly) | $5,000+ |
@@ -451,7 +454,7 @@ audit_trail          -- application-level PHI access log (who, what, when)
 
 **Pricing:** $500--$4,000/month per clinic (3 tiers). At the $2,000/month entry tier, platform unlocks $195K--$267K/year in new revenue -- **8--11x return on subscription cost.**
 
-**Funding tailwind:** $50B Rural Health Transformation (RHT) Program allocates funding to states for healthcare technology. Position 3C as eligible technology spend.
+**Funding tailwind:** $50B Rural Health Transformation (RHT) Program (Public Law 119-21, $10B/year FY2026--FY2030) allocates funding to states for healthcare technology infrastructure. Virginia's FY2026 allocation is estimated at $147M--$281M. Position 3C as eligible technology spend for RHT state grants.
 
 ---
 
@@ -467,6 +470,8 @@ audit_trail          -- application-level PHI access log (who, what, when)
 | **n8n Community Edition throughput limit** | LOW | LOW | 23 req/s single mode is 10x our Phase 1 load. Upgrade to Enterprise queue mode in Phase 2 if needed |
 | **EHR vendor blocks API access** | MEDIUM | LOW | Apply for developer program early. Backup: CSV/manual import. Multiple pilot clinics reduces single-EHR dependency |
 | **AWS GovCloud cost overrun** | LOW | LOW | $34K contingency. GovCloud pricing is well-documented. Set billing alerts at $1K/month |
+| **Pilot clinic drops out mid-project** | HIGH | MEDIUM | Secure LOIs from 4--5 candidate clinics. Maintain "cold start" demo mode with synthetic data. 2--3 clinic target provides redundancy |
+| **n8n Community Edition lacks SSO/RBAC (HIPAA access control gap)** | MEDIUM | HIGH (certainty) | Restrict n8n UI to VV engineering via VPN + IP allowlisting. Clinic staff access React frontend only (application-level RBAC). Evaluate n8n Enterprise or external auth proxy for Phase 2 |
 
 ---
 
