@@ -1,187 +1,187 @@
 # 3C PLATFORM -- IMPLEMENTATION GUIDE
 
-**Version:** 1.0 | **Classification:** Internal -- Authentic Consortium
+**Version:** 2.0 | **Classification:** Internal -- Authentic Consortium
 **Prepared by:** Veteran Vectors (VV) Engineering
-**Date:** February 24, 2026
+**Date:** February 25, 2026
 **Purpose:** Actionable build plan for the 3C Platform assuming VIPC VVP Launch Grant award ($50K)
 
 ---
 
 ## 1. EXECUTIVE SUMMARY
 
-This document is the engineering and business execution plan for building the **3C Platform** -- a unified Salesforce Health Cloud solution for Rural Health Clinics (RHCs) that addresses **Compliance**, **Care**, and **Collect Cash**. It covers the technical architecture, specific tools and licenses, development phases, cost breakdowns, team requirements, partner dependencies, and pilot strategy. This is a build document, not a pitch deck -- every line item is something VV will execute.
+This is the engineering and business execution plan for the **3C Platform** -- a unified solution for Rural Health Clinics (RHCs) addressing **Compliance**, **Care**, and **Collect Cash**. The platform is built on VV's proven stack: **n8n** (workflow automation), **PostgreSQL 16** (database), **Python/FastAPI** (API/ML), **React/Next.js** (frontend), and **Docker containers** on **Amazon GovCloud**. This is the same architecture VV deploys for defense clients, adapted for healthcare.
+
+**Key architecture decision:** No enterprise SaaS dependencies. VV owns every line of code. The $50K VIPC grant funds infrastructure and operations -- not licensing fees or contract developers. Will Nelson builds and maintains the system as VV's technical lead.
 
 **Scope:** $50K VIPC grant funds Phase 1 (MVP). Subsequent phases funded by pilot revenue and Series A.
 
 ---
 
-## 2. TECHNICAL ARCHITECTURE -- DETAILED BUILD SPECIFICATION
+## 2. TECHNICAL ARCHITECTURE
 
 ### 2.1 Platform Stack
 
-| Layer | Technology | Purpose | License Model |
+| Layer | Technology | Purpose | Cost Model |
 |---|---|---|---|
-| **CRM/Core** | Salesforce Health Cloud (Enterprise) | Patient 360, care plans, provider workflows | $325/user/month |
-| **Integration** | MuleSoft Anypoint (or Salesforce Connect + custom APIs) | EHR, wearable, clearinghouse connections | See cost analysis Sec. 6 |
-| **AI/ML** | Salesforce Einstein + custom Python models (scikit-learn, XGBoost, PyTorch) | Risk stratification, NLP, anomaly detection | Einstein: $150/user/month (Agentforce Healthcare); custom models: self-hosted |
-| **Security** | Salesforce Shield (Platform Encryption + Event Monitoring) | HIPAA encryption, audit trails, PHI access monitoring | ~30% of SF license spend |
-| **Analytics** | Salesforce Reports & Dashboards (Phase 1); CRM Analytics (Phase 2+) | Compliance dashboards, MIPS tracking, revenue analytics | Reports/Dashboards: included; CRM Analytics: add-on ~$75--$150/user/month |
-| **Database** | Salesforce platform + external data warehouse (BigQuery or Snowflake) for ML training | Operational data in SF; analytics/training data in warehouse | SF: included; warehouse: usage-based |
-| **Hosting (custom models)** | Google Cloud Platform (GCP) Healthcare API or AWS HealthLake | HIPAA-eligible model serving, FHIR data store | GCP: ~$500--$2,000/month at pilot scale |
-| **DevOps** | GitHub (private repos) + GitHub Actions CI/CD | Source control, automated testing, deployment | GitHub Team: $4/user/month |
-| **Monitoring** | Salesforce Event Monitoring + Datadog (APM) | Application performance, error tracking | Datadog: ~$15/host/month |
+| **Hosting** | Amazon GovCloud (ECS Fargate + RDS + S3) | FedRAMP High, HIPAA BAA, ITAR-compliant infrastructure | Pay-as-you-go (~$750/month at pilot scale) |
+| **Workflow Engine** | n8n (self-hosted, Community Edition) | EHR integration, RPM ingestion orchestration, billing automation, compliance workflows, alert routing | Free (open-source) |
+| **Database** | PostgreSQL 16 (Amazon RDS Multi-AZ) | Central data store. Row-level security for multi-tenant clinic isolation. PGAudit for HIPAA audit trail | Included in GovCloud hosting |
+| **API / ML** | Python 3.11 + FastAPI | ML model serving (risk stratification), high-frequency RPM data ingestion, FHIR data transforms | Free (open-source) |
+| **Frontend** | React / Next.js | Clinic dashboard: Patient 360, compliance tracker, billing tracker, MIPS dashboard, RPM data display | Free (open-source) |
+| **Reverse Proxy** | NGINX | TLS 1.2+ termination, HSTS, CSP headers, rate limiting | Free (open-source) |
+| **FHIR Integration** | bonFHIR (n8n community node) + direct FHIR R4 HTTP calls | Native FHIR R4 actions and triggers for EHR connectivity | Free (Apache 2.0 license) |
+| **Containers** | Docker + ECS Fargate | Containerized deployment. Same delivery model as VV defense deployments | Included in GovCloud hosting |
+| **Security** | AWS KMS + PGAudit + CloudTrail + application-level field encryption | AES-256 at rest, TLS 1.2+ in transit, HIPAA audit logging, PHI field encryption | KMS: ~$1/key/month; rest included |
+| **Monitoring** | CloudWatch + CloudWatch Logs | Application performance, error tracking, HIPAA log archival | Included in GovCloud |
+| **DevOps** | GitHub (private repos) + GitHub Actions CI/CD | Source control, automated testing, container builds | GitHub Team: $4/user/month |
 
-### 2.2 Phase 1 (MVP) Architecture -- What We Actually Build First
-
-For the $50K grant phase, we do NOT build the full architecture. We build a functional MVP on a constrained stack:
+### 2.2 Phase 1 MVP Architecture
 
 ```
 +------------------------------------------------------------------+
-|              PHASE 1 MVP ARCHITECTURE ($50K Budget)               |
+|              PHASE 1 MVP (Amazon GovCloud, $50K Budget)           |
 |                                                                   |
 |  +---------------------------+  +------------------------------+  |
-|  | Salesforce Health Cloud   |  | Custom AI Microservices      |  |
-|  | (Enterprise, 5 users)     |  | (GCP Cloud Run, Python)      |  |
+|  | React/Next.js Frontend    |  | Python/FastAPI Services       |  |
+|  | (ECS Fargate)             |  | (ECS Fargate)                |  |
 |  |                           |  |                              |  |
-|  | - Patient records (360)   |  | - Risk stratification model |  |
-|  | - Care plan templates     |  |   (XGBoost on CMS PUF data) |  |
-|  | - Compliance task mgmt    |  | - FHIR data transforms      |  |
-|  | - MIPS quality tracking   |  |   (device -> Observation)   |  |
-|  | - RPM data display        |  |                              |  |
-|  | - Basic billing tracking  |  |                              |  |
+|  | - Patient 360 dashboard   |  | - Risk stratification model  |  |
+|  | - Compliance tracker      |  |   (XGBoost + SHAP)           |  |
+|  | - RPM data display        |  | - RPM data ingestion service |  |
+|  | - Billing tracker         |  |   (polls device vendor APIs) |  |
+|  | - MIPS quality dashboard  |  | - FHIR data transforms       |  |
+|  | - Care gap alerts         |  |   (device → Observation)     |  |
 |  +------------+--------------+  +--------------+---------------+  |
 |               |                                |                  |
-|               +----------+  +------------------+                  |
-|                          |  |                                     |
-|               +----------+--+------------------+                  |
-|               | Integration Layer              |                  |
-|               | (Salesforce Connect +          |                  |
-|               |  Named Credentials +           |                  |
-|               |  Apex REST callouts)           |                  |
-|               +---------+-----------+----------+                  |
-|                         |           |                             |
-|            +------------+    +------+--------+                    |
-|            | EHR (FHIR R4)   | RPM Devices   |                   |
-|            | (1-2 systems)   | (BLE/API)     |                   |
-|            +----------------+ +--------------+                    |
+|  +------------+--------------------------------+---------------+  |
+|  |                    n8n (ECS Fargate)                         |  |
+|  |                                                             |  |
+|  |  - EHR FHIR integration (bonFHIR node)                     |  |
+|  |  - RPM threshold monitoring + alert routing                 |  |
+|  |  - Billing event generation (16-day, 20-min triggers)      |  |
+|  |  - Compliance task scheduling + reminders                   |  |
+|  |  - Care gap detection (scheduled)                          |  |
+|  |  - Notification pipelines (email/SMS)                      |  |
+|  +-----+------------------+------------------+----------------+  |
+|        |                  |                  |                    |
+|  +-----+------+  +-------+-------+  +-------+----------------+  |
+|  | PostgreSQL |  | EHR (FHIR R4) |  | RPM Device APIs        |  |
+|  | 16 (RDS)   |  | (1 system:    |  | (Tenovi or Smart Meter |  |
+|  | + PGAudit  |  |  eCW/athena/  |  |  cellular devices)     |  |
+|  | + RLS      |  |  Azalea)      |  |                        |  |
+|  +------------+  +---------------+  +------------------------+  |
 +------------------------------------------------------------------+
 ```
 
 **Key MVP decisions:**
-- **No MuleSoft in Phase 1.** MuleSoft starts at ~$80K/year minimum -- that's more than our entire grant. Use Salesforce Connect, Named Credentials, and Apex REST callouts for Phase 1 integrations. MuleSoft comes in Phase 2 when revenue supports it.
-- **Custom AI models hosted externally.** Salesforce Einstein for basic automation (lead scoring, flow triggers). Custom ML models (risk stratification, NLP) deployed as containerized Python services on GCP Cloud Run (HIPAA-eligible with BAA). Called from Salesforce via REST API.
-- **Shield encryption required from Day 1.** Non-negotiable for HIPAA. Budget for it.
-- **5 Salesforce users for pilot.** Enough for 2--3 clinic staff + VV admin/support users.
+- **Hybrid ingestion pattern.** Python/FastAPI service handles high-frequency RPM device data polling (Tenovi/Smart Meter APIs). n8n handles workflow orchestration on top -- alert routing when thresholds are exceeded, billing event generation, care gap detection. This split is based on production architecture research: n8n excels at workflow orchestration but dedicated services are more robust for high-frequency data ingestion
+- **n8n Community Edition is sufficient for Phase 1.** Throughput: ~23 req/s single mode. Our load: ~1--5 req/s at peak with 2--3 clinics. Queue mode (Enterprise) is a Phase 2 upgrade path when scaling to 10+ clinics
+- **bonFHIR for FHIR integration.** Purpose-built n8n community node (Apache 2.0) providing native FHIR R4 actions and triggers. Chosen specifically because it was designed for self-hosted HIPAA-compliant n8n deployments
+- **PostgreSQL row-level security for multi-tenancy.** Each clinic is a tenant. RLS policies enforce data isolation at the database level -- not just application code. PGAudit logs every query against PHI tables. This pattern is validated by AWS reference architectures and HIPAA compliance guidance
+- **Application-level field encryption for sensitive PHI.** AES-256 via AWS KMS envelope encryption on SSN, diagnosis codes, treatment notes. Provides breach safe harbor under HIPAA Breach Notification Rule -- encrypted data is "unreadable, unusable, and indecipherable"
 
 ### 2.3 EHR Integration Strategy
 
-**Target EHR systems for RHC market** (by market share in small/rural practices):
+**Target EHR systems for RHC market:**
 
-| EHR | RHC Market Share | FHIR R4 Support | Integration Approach |
+| EHR | RHC Relevance | FHIR R4 Support | Integration Approach |
 |---|---|---|---|
-| **eClinicalWorks (eCW)** | ~12% ambulatory (largest cloud ambulatory install base, 850K+ physicians) | Yes (certified) | eCW FHIR API; strong in FQHCs and primary care |
-| **athenahealth** | ~7% ambulatory (Best in KLAS 2025 for independent practices) | Yes (certified) | athenahealth FHIR APIs (well-documented, developer-friendly); integrated RCM |
-| **MEDITECH Expanse** | ~13% acute care (dominant in rural/community hospitals) | Yes | MEDITECH FHIR endpoints; 29 of Becker's "2025 Great Community Hospitals" use MEDITECH |
-| **Azalea Health** | Niche (purpose-built for RHCs) | Yes (ONC-certified) | Cloud-based, integrated clearinghouse, handles RHC split billing and UB04/CMS1500 formats. HITRUST E1 certified |
-| **TruBridge/CPSI (Evident)** | ~9% acute care (specifically for rural/community hospitals) | Partial | Integrated clearinghouse and RCM; may need HL7v2 interface for older versions |
+| **eClinicalWorks** | Largest cloud ambulatory install base, strong in FQHCs and primary care | Yes (ONC-certified) | bonFHIR node + eCW FHIR API; SMART on FHIR Backend Services auth |
+| **athenahealth** | Best in KLAS 2025 for independent practices; developer-friendly APIs | Yes (ONC-certified) | bonFHIR node + athenahealth FHIR API; integrated RCM data |
+| **MEDITECH Expanse** | Dominant in rural/community hospitals; 29 of Becker's "2025 Great Community Hospitals" use MEDITECH | Yes | FHIR endpoints via HTTP Request node; may need HL7v2 bridge for older installs |
+| **Azalea Health** | Purpose-built for RHCs; native RHC billing (UB04/CMS1500); HITRUST E1 certified | Yes (ONC-certified) | bonFHIR node + Azalea FHIR API; ideal if pilot clinics use Azalea |
+| **TruBridge/CPSI** | Specifically for rural/community hospitals | Partial | May need HL7v2 interface for older versions; FHIR for Evident Thrive |
 
-**Phase 1 pilot target:** Integrate with **1 EHR system** used by the pilot clinics. Prioritize eClinicalWorks or athenahealth -- both have the best FHIR R4 support and developer programs. If pilot clinics use **Azalea Health**, that's ideal since Azalea is purpose-built for RHCs and has native RHC billing support.
+**Phase 1:** Integrate with **1 EHR system** (whichever the pilot clinic uses). Prioritize eCW or athenahealth (best FHIR support + developer programs). Azalea is ideal if available.
 
-**FHIR Implementation Guides to follow:**
-- US Core (v8.0.1 / STU8) -- mandatory baseline for all US clinical data exchange (verify latest published version at time of build; v9.0.0 targeting USCDI v6 is in development)
-- SMART on FHIR (for app authorization)
-- Bulk FHIR (for panel-level data extraction)
-- DaVinci DEQM (Data Exchange for Quality Measures) -- for MIPS/eCQM reporting via FHIR
-- DaVinci CRD/PAS (Coverage Requirements Discovery / Prior Authorization Support) -- Phase 2 for claims optimization
-- C-CDA on FHIR -- bridge for legacy EHRs that still produce C-CDA documents rather than native FHIR
+**FHIR Implementation Guides:**
+- US Core (v8.0.1 / STU8) -- mandatory baseline
+- SMART on FHIR (Backend Services flow for system-to-system auth -- n8n handles OAuth 2.0 via generic credential config)
+- Bulk FHIR (panel-level data extraction)
+- DaVinci DEQM (quality measure reporting) -- Phase 2
+- DaVinci CRD/PAS (prior auth support) -- Phase 2
 
-### 2.4 Wearable/RPM Device Integration
+**SMART on FHIR auth in n8n:** n8n supports generic OAuth 2.0 credentials. For Backend Services (system-to-system, no user in the loop): use a Code node to sign JWT with private key and exchange for access token. For Standalone Launch: use n8n's built-in OAuth 2.0 credential type with EHR's authorization/token endpoints and SMART scopes.
 
-**Phase 1 target devices** (most commonly used in clinical RPM programs):
+### 2.4 RPM Device Integration
 
-| Device Type | Recommended Device | Approx. Cost/Unit | Integration Method |
+**Cellular-connected devices are mandatory for rural patients.** Most lack reliable WiFi or smartphones.
+
+| Device Type | Recommended Device | Approx. Cost/Unit | Integration |
 |---|---|---|---|
-| **Blood Pressure Cuff** | Smart Meter iBloodPressure (cellular, no WiFi needed) or Omron VitalSight (BP8000-M) | $80--$150 | Cellular direct to cloud (Smart Meter API) or Tenovi gateway API |
-| **Pulse Oximeter** | Smart Meter iPulseOx (cellular) or Nonin 3230 (BLE via Tenovi) | $100--$300 | Smart Meter API or Tenovi aggregator API |
-| **Glucose Monitor** | Smart Meter iGlucose Plus (cellular) or Dexcom Stelo (OTC CGM, no prescription) | $70--$150/month | Smart Meter API or Dexcom Clarity API |
-| **Weight Scale** | Smart Meter iScale (cellular) or BodyTrace e-Scale (cellular) | $50--$120 | Smart Meter API or BodyTrace API |
+| **Blood Pressure Cuff** | Smart Meter iBloodPressure (cellular) or Omron VitalSight via Tenovi | $80--$150 | Python ingestion service → PostgreSQL |
+| **Pulse Oximeter** | Smart Meter iPulseOx (cellular) or Nonin 3230 via Tenovi | $100--$300 | Python ingestion service → PostgreSQL |
+| **Glucose Monitor** | Smart Meter iGlucose Plus (cellular) or Dexcom Stelo OTC CGM | $70--$150/month | Python ingestion service → PostgreSQL |
+| **Weight Scale** | Smart Meter iScale (cellular) or BodyTrace e-Scale | $50--$120 | Python ingestion service → PostgreSQL |
 
-**Critical for rural: Cellular-connected devices are mandatory.** Rural patients often lack reliable WiFi or smartphones. Devices from Smart Meter and Prevounce (Pylo) transmit data via built-in cellular modems (multi-carrier SIM) with zero patient tech setup. BLE-based devices (Omron, Withings, Nonin) require a gateway -- **Tenovi** provides a cellular hub that bridges 40+ FDA-cleared BLE devices to their cloud API, making them viable for rural use.
+**Recommended Phase 1 approach:** Partner with **Tenovi** (40+ FDA-cleared devices, single API, cellular gateway) or go direct with **Smart Meter** (proprietary cellular devices, zero patient setup).
 
-**Recommended Phase 1 approach:** Partner with **Tenovi** as the device aggregation layer. One API integration covers 40+ devices from A&D Medical, Omron, Transtek, Trividia, Nonin, and Welch Allyn. Alternatively, go direct with **Smart Meter** for the simplest rural deployment (proprietary cellular devices, zero patient setup).
-
-**RPM data flow (Phase 1):**
+**Data flow:**
 ```
-Patient device (cellular) -> Device vendor cloud (Smart Meter / Tenovi)
-                                              |
-                             VV integration service (GCP Cloud Run)
-                                              |
-                                    Transform to FHIR Observation
-                                              |
-                                    POST to Salesforce Health Cloud
-                                              |
-                                    Trigger alert Flow if threshold exceeded
+Patient device (cellular) → Device vendor cloud (Smart Meter / Tenovi)
+                                            |
+                           Python ingestion service (ECS Fargate)
+                           - Polls vendor API on interval
+                           - Validates + normalizes readings
+                           - Writes to PostgreSQL (RPM_Reading table)
+                                            |
+                                   n8n workflow triggered
+                           - Checks thresholds (BP>180, SpO2<90, etc.)
+                           - If exceeded: create alert, notify provider
+                           - Nightly: count transmission days per patient
+                           - If ≥16 days: flag billable for CPT 99454
 ```
-
-**Billing trigger logic:** Track device data transmission days per patient per month. When a patient hits 16 days of data in a calendar month, auto-flag as billable for CPT 99454 ($52.11). Track clinician interactive time for 99457/99458.
 
 ---
 
 ## 3. MODULE BUILD SPECIFICATIONS
 
-### 3.1 Compliance Module -- Build Details
+### 3.1 Compliance Module
 
-| Feature | Salesforce Implementation | Custom Development | Phase |
+| Feature | Implementation | Custom Development | Phase |
 |---|---|---|---|
-| **HIPAA Compliance Tracker** | Custom object: `HIPAA_Compliance_Task__c` with fields for task type, due date, assignee, status, evidence attachment. Flow-based reminders and escalation | None -- pure configuration | Phase 1 |
-| **HIPAA Risk Assessment** | Pre-built assessment questionnaire (Salesforce Survey or custom LWC form) mapped to NIST SP 800-66 controls. Auto-scores risk level | LWC (Lightning Web Component) for assessment UI | Phase 1 |
-| **HRSA UDS Data Aggregation** | Report type pulling from Patient, Encounter, Diagnosis, and Demographics objects. Pre-built reports matching UDS Table structure (Tables 3A, 3B, 4, 5, 6A, 6B, 7, 8A, 9D, 9E). **Note:** UDS reporting is mandatory for HRSA-funded health centers (FQHCs), not standalone RHCs. However, many RHCs are also FQHCs, and building this positions all clinics for value-based care | Apex batch job to aggregate data across reporting period; export to UDS-compatible format | Phase 2 |
-| **CMS Quality Measure Dashboard** | CRM Analytics dashboard tracking MIPS measures: Quality (30%), Cost (30%), Promoting Interoperability (25%), Improvement Activities (15%). Real-time score projection | Apex scheduled job to calculate measure numerators/denominators from clinical data | Phase 1 (basic), Phase 2 (full) |
-| **Regulatory Change Alerts** | Integration with Federal Register API + CMS/HRSA RSS feeds. Flow-triggered notifications when relevant changes detected | Python NLP service to classify regulatory updates by relevance to RHC operations | Phase 3 |
-| **FCC Broadband Compliance** | Custom object tracking E-Rate/RHC Program filings, deadlines, and documentation | None -- pure configuration | Phase 2 |
+| **HIPAA Compliance Tracker** | PostgreSQL table: `compliance_tasks` (clinic_id, task_type, due_date, assignee, status, evidence_url). n8n scheduled workflow for reminders and escalation | React UI for task management | Phase 1 |
+| **HIPAA Risk Assessment** | Pre-built assessment questionnaire (React form) mapped to NIST SP 800-66 controls. Auto-scores risk level and generates PDF report | Python report generator | Phase 1 |
+| **HRSA UDS Report Generation** | n8n workflows pulling patient, encounter, diagnosis, demographics data via FHIR. Pre-built reports matching UDS table structure. **Note:** UDS is mandatory for FQHCs, not standalone RHCs, but positions all clinics for value-based care | Python data aggregation + report export | Phase 2 |
+| **CMS Quality Dashboard** | React dashboard tracking MIPS measures: Quality (30%), Cost (30%), PI (25%), IA (15%). Real-time score projection | Python scheduled job calculating measure numerators/denominators | Phase 1 (basic), Phase 2 (full) |
+| **Regulatory Change Alerts** | n8n scheduled workflow polling Federal Register API + CMS/HRSA RSS feeds. Python NLP classifier for relevance filtering | Python NLP service (spaCy) | Phase 3 |
 
-**Salesforce objects to create (Phase 1):**
-- `Compliance_Task__c` (master-detail to Account)
-- `Risk_Assessment__c` (master-detail to Account)
-- `Risk_Assessment_Response__c` (master-detail to Risk_Assessment__c)
-- `Quality_Measure__c` (lookup to Account)
-- `Quality_Measure_Result__c` (master-detail to Quality_Measure__c, lookup to Contact/Patient)
+### 3.2 Care Module
 
-### 3.2 Care Module -- Build Details
-
-| Feature | Salesforce Implementation | Custom Development | Phase |
+| Feature | Implementation | Custom Development | Phase |
 |---|---|---|---|
-| **Patient Risk Stratification** | Einstein prediction on Contact (Patient) object, or external model score written back to custom field `Risk_Score__c` | XGBoost model trained on CMS Public Use Files (Medicare claims, chronic conditions). Features: age, diagnosis codes (HCCs), utilization history, medication count, social determinants. Deployed on GCP Cloud Run, called via Apex REST callout | Phase 1 |
-| **RPM Data Ingestion** | Custom objects: `RPM_Reading__c` (master-detail to Contact). Fields: device type, measurement value, measurement date, device ID, transmission flag | Python integration service on GCP Cloud Run. Pulls from RPM aggregator API (Tenovi or Smart Meter), transforms to `RPM_Reading__c` records via Salesforce REST API | Phase 1 |
-| **Deterioration Alerts** | Flow triggered on `RPM_Reading__c` insert. Evaluates against threshold rules (e.g., systolic BP >180, SpO2 <90, weight gain >3 lbs/day). Creates Task for care team, sends push notification | Phase 1: rule-based thresholds. Phase 2: ML trend analysis model (sliding-window anomaly detection) | Phase 1 (rules), Phase 2 (ML) |
-| **Care Gap Detection** | Scheduled Apex job comparing patient records against USPSTF/CMS preventive care guidelines. Generates `Care_Gap__c` records for overdue screenings, immunizations, annual wellness visits | Guideline rules engine in Apex. Initial rule set: A1C testing (diabetics), mammography, colorectal screening, flu/pneumonia vaccines, annual wellness visit, depression screening (PHQ-9) | Phase 1 |
-| **Care Plan Management** | Health Cloud native Care Plan object with custom care plan templates for top chronic conditions (diabetes, hypertension, COPD, CHF, depression) | None -- Health Cloud configuration + custom templates | Phase 1 |
-| **Telehealth Integration** | Embedded video link (Zoom for Healthcare or Doxy.me) in patient record. One-click launch from Salesforce | Zoom API or Doxy.me widget embedded via LWC | Phase 2 |
+| **Patient Risk Stratification** | XGBoost model trained on CMS Public Use Files. Features: age, HCC risk score, diagnosis count, utilization history, medication count, SVI. Output: risk score (0--100) + tier + top 3 SHAP factors | FastAPI model server on ECS Fargate; called by n8n for batch scoring or React for on-demand | Phase 1 |
+| **RPM Data Ingestion** | PostgreSQL table: `rpm_readings` (clinic_id, patient_id, device_type, value, reading_date, device_id, transmission_flag). Python ingestion service on ECS Fargate polls vendor APIs | Python ingestion service + n8n threshold monitoring | Phase 1 |
+| **Deterioration Alerts** | n8n workflow triggered on new RPM readings. Evaluates threshold rules (BP >180, SpO2 <90, weight gain >3 lbs/day). Creates alert task, sends provider notification | Phase 1: rule-based. Phase 2: ML trend analysis (sliding-window anomaly detection) | Phase 1 |
+| **Care Gap Detection** | n8n scheduled workflow comparing patient records against USPSTF/CMS preventive care guidelines. Generates care gap records for overdue screenings, immunizations, AWVs | Python guideline rules engine | Phase 1 |
+| **Care Plan Management** | PostgreSQL tables for care plan templates (diabetes, hypertension, COPD, CHF, depression). React UI for plan assignment and progress tracking | React care plan UI | Phase 1 |
+| **Telehealth Integration** | n8n integration with Zoom for Healthcare or Doxy.me via API. Embedded video link in patient record | React embedded widget + n8n scheduling workflow | Phase 2 |
 
 **ML Model Specification (Risk Stratification):**
 
 | Parameter | Value |
 |---|---|
-| **Algorithm** | XGBoost (gradient-boosted trees) -- baseline; logistic regression for interpretability comparison |
-| **Training Data** | CMS Medicare Public Use Files (100% sample claims data), CMS Chronic Conditions Data Warehouse (CCW) public data, MIMIC-IV (if needed for clinical validation) |
-| **Features** | Age, sex, HCC risk score, diagnosis count (ICD-10 categories), medication count, ED visits (12 months), inpatient admits (12 months), primary care visits (12 months), days since last visit, social vulnerability index (SVI) by census tract |
-| **Target Variable** | Binary: hospitalization or ED visit within 90 days |
-| **Output** | Risk score (0--100) + risk tier (Low/Medium/High/Critical) + top 3 contributing factors (SHAP values) |
+| **Algorithm** | XGBoost (gradient-boosted trees); logistic regression baseline for comparison |
+| **Training Data** | CMS Medicare Public Use Files (100% sample claims data), CMS Chronic Conditions Data Warehouse, MIMIC-IV (if needed) |
+| **Features** | Age, sex, HCC risk score, diagnosis count (ICD-10 categories), medication count, ED visits (12 mo), inpatient admits (12 mo), primary care visits (12 mo), days since last visit, social vulnerability index (SVI) |
+| **Target** | Binary: hospitalization or ED visit within 90 days |
+| **Output** | Risk score (0--100) + tier (Low/Medium/High/Critical) + top 3 contributing factors (SHAP values) |
 | **Performance Target** | AUC-ROC >0.75; sensitivity >80% for top-decile risk patients |
-| **Framework** | scikit-learn + XGBoost (Python); model serialized with joblib; served via FastAPI on GCP Cloud Run |
-| **Retraining Cadence** | Quarterly with updated claims data; triggered retraining if AUC drops below 0.72 |
-| **Interpretability** | SHAP (SHapley Additive exPlanations) for per-patient feature importance; required for clinical adoption |
+| **Framework** | scikit-learn + XGBoost; model serialized with joblib; served via FastAPI on ECS Fargate |
+| **Retraining** | Quarterly with updated claims data; triggered if AUC drops below 0.72 |
+| **Interpretability** | SHAP (SHapley Additive exPlanations) for per-patient feature importance |
 
-### 3.3 Collect Cash Module -- Build Details
+### 3.3 Collect Cash Module
 
-| Feature | Salesforce Implementation | Custom Development | Phase |
+| Feature | Implementation | Custom Development | Phase |
 |---|---|---|---|
-| **RPM Billing Tracker** | Custom object: `Billing_Event__c` (master-detail to Contact). Automated tracking of device data transmission days per patient per month. Flow logic: when `RPM_Reading__c` count >= 16 in a calendar month, create billable event for CPT 99454 ($52.11). Clinician time tracking for 99457/99458 | Apex scheduled batch: nightly roll-up of RPM readings per patient, flagging billable thresholds | Phase 1 |
-| **CCM Time Tracking** | Custom object: `CCM_Activity__c` with fields for patient, clinician, activity type, duration (minutes), date. Flow logic: when cumulative minutes >= 20 in a calendar month, flag for CPT 99490 ($66.30). Track complex CCM threshold (60 min) for 99487 (~$131.65) | Timer LWC component embedded in patient record for real-time time capture | Phase 1 |
-| **TCM Workflow** | Flow triggered on `Discharge_Notification__c` creation. Auto-creates tasks: (1) patient contact within 2 business days, (2) medication reconciliation, (3) face-to-face visit within 7 or 14 days. Tracks completion for CPT 99495 ($220) / 99496 ($298) | ADT (Admit/Discharge/Transfer) feed integration from hospital EHR (HL7v2 ADT message or FHIR Encounter) | Phase 2 |
-| **Coding Optimization** | NLP analysis of clinical notes to suggest missed diagnosis codes (HCCs) that affect risk adjustment and reimbursement | Python NLP pipeline: spaCy + MedCAT (medical concept annotation) + custom HCC mapping. Deployed on GCP Cloud Run | Phase 2 |
-| **Denial Prevention** | Rules engine checking claims against common denial reasons (missing auth, timely filing, documentation gaps) before submission | Apex rules engine with payer-specific rule sets; integration with clearinghouse pre-adjudication API | Phase 3 |
-| **MIPS Payment Projection** | CRM Analytics dashboard modeling projected MIPS payment adjustment based on current performance scores. Shows gap to avoid -9% penalty and path to positive adjustment | Apex calculation engine using CMS MIPS scoring methodology (Quality 30%, Cost 30%, PI 25%, IA 15%) | Phase 1 (basic), Phase 2 (full) |
+| **RPM Billing Tracker** | PostgreSQL table: `billing_events` (clinic_id, patient_id, cpt_code, service_date, status). n8n nightly workflow: count transmission days per patient → flag billable when ≥16 days (99454) or ≥2 days (99445 new 2026 code). Track clinician time for 99457/99458/99470 | n8n workflows + React billing dashboard | Phase 1 |
+| **CCM Time Tracking** | PostgreSQL table: `ccm_activities` (patient_id, clinician_id, activity_type, duration_minutes, date). React timer component for real-time capture. n8n workflow: when cumulative minutes ≥20, flag for 99490 ($66.30). Track complex CCM (60 min) for 99487 (~$131.65) | React timer component + n8n billing logic | Phase 1 |
+| **Patient Consent Capture** | React consent form (clinical + Medicare RPM consent). Digital signature capture. Stored in PostgreSQL with audit trail. Required before RPM billing | React consent form UI | Phase 1 |
+| **TCM Workflow** | n8n workflow triggered on discharge notification (ADT feed via FHIR or HL7v2). Auto-creates tasks: contact within 2 days, med reconciliation, visit within 7/14 days. Tracks for 99495/99496 | n8n workflow + hospital ADT integration | Phase 2 |
+| **Coding Optimization** | NLP analysis of clinical notes for missed HCC codes | Python NLP (spaCy + MedCAT) via FastAPI | Phase 2 |
+| **Denial Prevention** | Rules engine checking claims against payer denial patterns before submission | Python rules engine + clearinghouse integration (Office Ally first) | Phase 3 |
+| **MIPS Payment Projection** | React dashboard modeling projected MIPS payment adjustment. Shows gap to avoid -9% penalty | Python scoring engine using CMS MIPS methodology | Phase 1 (basic), Phase 2 (full) |
 
 **CMS Reimbursement Reference (2026 Rates):**
 
@@ -189,10 +189,10 @@ Patient device (cellular) -> Device vendor cloud (Smart Meter / Tenovi)
 |---|---|---|---|
 | 99453 | RPM device setup (one-time) | $22.00 | Initial setup + 2 days monitoring |
 | 99454 | RPM device supply/data (monthly) | $52.11 | 16+ days of data transmission |
+| 99445 | RPM device supply/data (2--15 days) -- NEW 2026 | ~$52.11 | 2--15 days of data (new lower threshold) |
 | 99457 | RPM first 20 min interactive (monthly) | $51.77 | 20 min clinician time |
-| 99458 | RPM additional 20 min | ~$41.42 | Each additional 20 min beyond 99457 (no explicit cap per 2026 final rule; historically limited to 2 units, verify current CMS guidance) |
-| 99445 | RPM device supply/data (2--15 days/month) -- NEW 2026 | ~$52.11 | 2--15 days of data transmission (new lower threshold) |
-| 99470 | RPM first 10 min interactive -- NEW 2026 | ~$26.05 | 10--19 min clinician time (alternative to 99457 for shorter interactions) |
+| 99458 | RPM additional 20 min | ~$41.42 | Each additional 20 min beyond 99457 |
+| 99470 | RPM first 10 min interactive -- NEW 2026 | ~$26.05 | 10--19 min clinician time |
 | 99490 | CCM first 20 min (monthly) | $66.30 | 20 min staff time, 2+ chronic conditions |
 | 99439 | CCM additional 20 min (up to 2x/month) | $50.56 | Each additional 20 min |
 | 99487 | Complex CCM first 60 min (monthly) | ~$131.65 | 60 min staff time, complex needs |
@@ -201,163 +201,149 @@ Patient device (cellular) -> Device vendor cloud (Smart Meter / Tenovi)
 | 99496 | TCM high complexity | $298.00 | Contact within 2 days, visit within 7 days |
 
 **Revenue unlock per clinic (conservative estimate):**
-Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence (200 patients eligible for CCM/RPM), 40% of eligible enrolled in RPM in Year 1 (80 patients), 60% of eligible enrolled in CCM (120 patients):
+Assume 800 Medicare patients, 25% chronic disease prevalence (200 eligible), 40% enrolled RPM (80 patients), 60% enrolled CCM (120 patients):
 
 | Revenue Stream | Patients | Monthly/Patient | Annual Revenue |
 |---|---|---|---|
 | RPM (99454 + 99457) | 80 | $103.88 | $99,725 |
 | CCM (99490) | 120 | $66.30 | $95,472 |
-| MIPS penalty avoidance (-9% on Medicare) | -- | -- | $36,000--$72,000 (depending on Medicare volume) |
+| MIPS penalty avoidance (-9% on Medicare) | -- | -- | $36,000--$72,000 |
 | **Total new annual revenue per clinic** | | | **$195,000--$267,000** |
 
 ---
 
-## 4. DEVELOPMENT ROADMAP
+## 4. DATABASE SCHEMA (Phase 1)
 
-### Phase 1: MVP / Proof of Concept (Months 1--4, $50K VIPC Grant)
+### 4.1 Multi-Tenant Architecture
 
-**Goal:** Working 3C Platform deployed at 2--3 Virginia RHCs with core functionality in all three modules.
+**Pattern:** Shared database, shared schema, PostgreSQL row-level security (RLS).
+
+Every table with PHI includes a `clinic_id` column. RLS policies enforce that each clinic can only see its own data. This is the same pattern VV uses for the BVG defense platform.
+
+```sql
+-- Enable RLS on all PHI tables
+ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
+CREATE POLICY clinic_isolation ON patients
+  USING (clinic_id = current_setting('app.current_clinic')::int);
+
+-- Set clinic context at connection level (not per-query)
+SET app.current_clinic = '42';
+```
+
+**Why RLS over schema-per-tenant:** O(1) migrations (single schema), simpler connection pooling, scales to hundreds of tenants. HIPAA auditors require demonstrable isolation, not a specific mechanism. RLS + PGAudit provides both isolation and audit proof.
+
+### 4.2 Core Tables
+
+```
+clinics              -- tenant: clinic info, settings, EHR config
+users                -- staff accounts, roles, clinic_id
+patients             -- demographics, insurance, clinic_id
+encounters           -- visit records, linked to patients
+rpm_readings         -- device data: type, value, date, device_id, clinic_id
+billing_events       -- CPT code, patient, status, service date, clinic_id
+compliance_tasks     -- HIPAA/regulatory tasks, due dates, clinic_id
+care_gaps            -- overdue screenings/immunizations, clinic_id
+care_plans           -- care plan assignments, templates, clinic_id
+risk_scores          -- ML model output, SHAP values, clinic_id
+ccm_activities       -- clinician time tracking for CCM billing, clinic_id
+audit_trail          -- application-level PHI access log (who, what, when)
+```
+
+### 4.3 Testing Strategy
+
+| Level | Approach | Target |
+|---|---|---|
+| **Unit tests** | pytest for Python services, Jest for React components | 80%+ code coverage |
+| **Integration tests** | FHIR endpoint integration tests against EHR sandbox, RPM API integration tests against vendor sandbox | All integration paths tested |
+| **RLS isolation tests** | Automated tests verifying cross-tenant data leakage is impossible | Run in CI pipeline on every deploy |
+| **UAT** | Pilot clinic staff test workflows with real (de-identified) data | Clinic sign-off before go-live |
+| **Load testing** | Simulate 500 RPM readings/hour, 50 concurrent dashboard users | Verify <2s response time |
+
+---
+
+## 5. DEVELOPMENT ROADMAP
+
+### Phase 1: MVP (Months 1--4, $50K VIPC Grant)
+
+**Goal:** Working 3C Platform at 2--3 Virginia RHCs with core functionality in all three modules.
 
 | Month | Sprint | Deliverables |
 |---|---|---|
-| **Month 1** | Sprint 1--2 | **Foundation:** Salesforce Health Cloud instance provisioned (Enterprise, 5 users). Shield encryption enabled. Core data model deployed (custom objects, fields, relationships). Patient import from pilot clinic EHR (manual CSV or FHIR bulk export). HIPAA compliance task tracker live. Care plan templates configured for diabetes, hypertension, CHF |
-| **Month 2** | Sprint 3--4 | **Care + RPM:** EHR FHIR integration with pilot clinic EHR (athenahealth or eCW -- read-only patient/encounter data). RPM device integration (1--2 device types: BP cuff + scale or glucose monitor). RPM data flowing into Salesforce. Alert rules configured (threshold-based). Care gap detection rules for top 6 preventive measures. Risk stratification model v1 trained and deployed (GCP Cloud Run) |
-| **Month 3** | Sprint 5--6 | **Collect Cash + Quality:** RPM billing tracker live (auto-flagging billable thresholds for 99453/99454/99457). CCM time tracking LWC deployed. MIPS quality measure dashboard (basic -- 3--5 key measures). Compliance dashboard for pilot clinics. End-to-end testing with pilot clinic staff |
-| **Month 4** | Sprint 7--8 | **Pilot Launch:** 2--3 Virginia RHCs live on 3C Platform. Staff training completed. Baseline metrics captured (compliance scores, care gaps, billing capture rate). Bug fixes and UX refinements based on staff feedback. Pilot outcomes report for Series A / next funding round |
+| **Month 1** | Sprint 1--2 | **Foundation:** GovCloud environment provisioned (ECS Fargate, RDS PostgreSQL, S3, KMS). Database schema deployed with RLS. NGINX + TLS configured. React scaffold with auth (Keycloak or custom JWT). Patient import from pilot clinic (CSV or FHIR bulk). HIPAA compliance tracker live. Care plan templates for diabetes, hypertension, CHF |
+| **Month 2** | Sprint 3--4 | **Care + RPM:** EHR FHIR integration with pilot clinic EHR (bonFHIR node in n8n, Backend Services auth). RPM device integration (Python ingestion service + 1--2 device types via Tenovi/Smart Meter). RPM data flowing into PostgreSQL + displayed in dashboard. Alert rules configured. Care gap detection for top 6 preventive measures. Risk stratification model v1 trained and deployed (FastAPI on Fargate) |
+| **Month 3** | Sprint 5--6 | **Collect Cash + Quality:** RPM billing tracker live (n8n auto-flagging 99453/99454/99457 thresholds). CCM time tracking (React timer + n8n billing logic). MIPS quality measure dashboard (basic, 3--5 measures). Compliance dashboard. Patient consent capture workflow. End-to-end testing with pilot clinic staff |
+| **Month 4** | Sprint 7--8 | **Pilot Launch:** 2--3 Virginia RHCs live. Staff training completed. Baseline metrics captured. Bug fixes and UX refinements. Pilot outcomes report for Series A / next funding round |
 
-### Phase 2: Full Product (Months 5--10, funded by pilot revenue + seed investment)
+### Phase 2: Full Product (Months 5--10, funded by pilot revenue + seed)
 
 | Month | Deliverables |
 |---|---|
-| **5--6** | MuleSoft integration layer (replace Apex callouts). Additional EHR integrations (2--3 more EHR systems). HRSA UDS report automation. Full MIPS dashboard (all 4 categories). Telehealth integration (Zoom for Healthcare) |
-| **7--8** | NLP coding optimization engine (spaCy + MedCAT). TCM workflow automation (ADT feed integration). Denial prevention rules engine (top 20 denial reasons). ML-based deterioration prediction (replaces rule-based alerts). Additional RPM devices (3--5 device types total) |
-| **9--10** | Multi-clinic deployment (10+ Virginia RHCs). Regulatory change monitoring (Federal Register NLP). AppExchange packaging exploration (ISV partner program). Performance benchmarking and case study publication |
+| **5--6** | Additional EHR integrations (2--3 more systems via n8n + bonFHIR). n8n Enterprise upgrade for queue mode (scale to 10+ clinics). HRSA UDS report automation. Full MIPS dashboard (all 4 categories). Telehealth integration (Zoom/Doxy.me via n8n) |
+| **7--8** | NLP coding optimization (spaCy + MedCAT via FastAPI). TCM workflow (ADT feed integration). Denial prevention rules engine. ML deterioration prediction (replaces rule-based alerts). Additional RPM devices (3--5 types total) |
+| **9--10** | 10+ Virginia RHCs live. Regulatory change monitoring (Federal Register NLP). Automated clinic onboarding workflow. Performance benchmarking and case study publication |
 
 ### Phase 3: Scale (Months 11--18, funded by Series A)
 
 | Month | Deliverables |
 |---|---|
-| **11--13** | AppExchange managed package (ISV distribution). Automated onboarding workflow (clinic self-provisioning). White-label/partner channel strategy. 50+ Virginia RHCs |
-| **14--16** | National expansion (target states: West Virginia, Kentucky, Tennessee, North Carolina -- high RHC density). Advanced AI features (population health analytics, predictive staffing). Clearinghouse direct integration (Availity, Change Healthcare/Optum) |
-| **17--18** | 100+ RHCs nationally. Series A close based on ARR and clinical outcomes data. SOC 2 Type II audit. HITRUST certification pathway |
+| **11--13** | Multi-region GovCloud deployment for HA/DR. Automated provisioning (new clinic live in hours). 50+ Virginia RHCs |
+| **14--16** | National expansion (WV, KY, TN, NC -- high RHC density). Advanced AI (population health analytics, predictive staffing). Clearinghouse direct integration (Availity, Change Healthcare) |
+| **17--18** | 100+ RHCs nationally. Series A close based on ARR + clinical outcomes. SOC 2 Type II audit. HITRUST certification pathway |
 
 ---
 
-## 5. TEAM REQUIREMENTS
+## 6. TEAM & BUDGET
 
-### 5.1 Phase 1 Team (Months 1--4) -- Minimum Viable Team
+### 6.1 Phase 1 Team (Months 1--4)
 
-| Role | Who | Commitment | Rate/Cost |
+| Role | Who | Commitment | Cost |
 |---|---|---|---|
-| **Technical Lead / Salesforce Architect** | Will Nelson (VV) | 30 hrs/week | Sweat equity (VV contribution to ACT) |
-| **Salesforce Developer** | Contract (Salesforce certified, Health Cloud experience) | 30 hrs/week x 4 months | $125--$150/hr = $60K--$72K (over budget -- see note below) |
-| **ML Engineer** | Contract or VV team member | 15 hrs/week x 3 months (Months 1--3) | $150/hr = $27K (or VV sweat equity) |
+| **Technical Lead / Full-Stack Developer** | Will Nelson (VV) | 40 hrs/week | Sweat equity |
+| **ML Engineering** | Will Nelson (VV) | Included above | Sweat equity |
 | **Clinical Advisor / SME** | Cari Ann (ACT) + pilot clinic provider | 5 hrs/week | ACT sweat equity |
-| **Project Manager** | Jim Pfautz (ACT CEO) | 5 hrs/week | ACT sweat equity |
+| **Project Manager / Business Development** | Jim Pfautz (ACT CEO) | 10 hrs/week | ACT sweat equity |
+| **Compliance / Preventive Health** | Jessica (ACT) | 5 hrs/week | ACT sweat equity |
 
-**Budget reality check:** A fully-contracted team exceeds $50K. The model that works:
+### 6.2 Phase 1 Budget ($50K VIPC Grant)
 
-| Item | Funded by VIPC Grant | Funded by VV/ACT Sweat Equity |
+| Item | Cost | Notes |
 |---|---|---|
-| Salesforce licenses (5 users x 4 months) | $6,500 | -- |
-| Salesforce Shield (4 months) | $1,950 | -- |
-| GCP hosting (HIPAA, 4 months) | $2,000 | -- |
-| RPM devices for pilot (10--15 units) | $1,500 | -- |
-| Contract Salesforce developer (part-time, 3 months) | $30,000 | -- |
-| ML model development tools/compute | $1,500 | -- |
-| Pilot clinic onboarding (travel, training) | $3,000 | -- |
-| Legal (HIPAA BAA, pilot agreements) | $2,000 | -- |
-| Miscellaneous (domain, email, tools) | $1,550 | -- |
-| **VIPC Grant Total** | **$50,000** | -- |
-| Technical Lead (Will, 480 hrs) | -- | ~$72,000 (in-kind) |
-| ML Engineering (VV team, 180 hrs) | -- | ~$27,000 (in-kind) |
-| Clinical Advisory (Cari Ann, 80 hrs) | -- | ~$12,000 (in-kind) |
-| Project Management (Jim, 80 hrs) | -- | ~$12,000 (in-kind) |
-| **Total Project Value (Phase 1)** | **$50,000 cash** | **~$123,000 in-kind** |
+| AWS GovCloud (ECS Fargate + RDS PostgreSQL Multi-AZ + S3 + KMS, 4 months) | $3,000 | ~$750/month at pilot scale |
+| RPM devices for pilot (15--20 units, cellular-connected) | $2,500 | Tenovi or Smart Meter; assumes pilot pricing |
+| Pilot clinic onboarding (travel, training, materials) | $4,500 | 2--3 clinics in Virginia |
+| ML model training compute (GovCloud GPU instances) | $1,500 | Training runs for risk stratification model |
+| Legal (HIPAA BAA templates, pilot agreements, consent forms) | $3,000 | Healthcare IT attorney |
+| EHR developer program access + FHIR sandbox fees | $500 | athenahealth / eCW / Azalea developer programs |
+| Domain, SSL (ACM), email (SES), monitoring | $1,000 | Annual domain + minimal SES + CloudWatch |
+| **Contingency / additional pilots** | **$34,000** | 68% of grant available for expansion or unexpected costs |
+| **VIPC Grant Total** | **$50,000** | |
+| Will (Technical Lead, 640 hrs @ $150/hr) | -- | ~$96,000 in-kind |
+| Cari Ann (Clinical Advisory, 80 hrs @ $150/hr) | -- | ~$12,000 in-kind |
+| Jim (Project Management, 160 hrs @ $150/hr) | -- | ~$24,000 in-kind |
+| Jessica (Compliance/Health, 80 hrs @ $150/hr) | -- | ~$12,000 in-kind |
+| **Total In-Kind** | -- | **~$144,000** |
+| **Total Project Value (Phase 1)** | **$50,000 cash + ~$144,000 in-kind = ~$194,000** |
 
-### 5.2 Phase 2 Team Additions (Months 5--10)
+**Why 68% contingency?** Will builds the platform -- no contract developer cost ($25K--$30K saved). No enterprise licensing ($8,450+ saved). The technology stack is free. The $50K funds operations and infrastructure. The large contingency gives ACT optionality: add pilot clinics, hire specialized help if needed, or absorb EHR integration surprises.
 
-| Role | Needed | Estimated Annual Cost |
+### 6.3 Infrastructure Costs at Scale
+
+| Scale | Monthly Infra | Annual Infra |
 |---|---|---|
-| Full-time Salesforce Developer | 1 FTE | $120,000--$140,000 |
-| Full-time ML/Data Engineer | 1 FTE | $130,000--$150,000 |
-| Implementation Specialist (clinic onboarding + training) | 1 FTE | $70,000--$85,000 |
-| Customer Success / Support | 0.5 FTE | $35,000--$42,000 |
-| Sales / Business Development | 1 FTE (likely Jim/ACT) | Sweat equity or $80,000--$100,000 |
+| Phase 1 (2--3 clinics, ~200 patients) | ~$750 | ~$9,000 |
+| Phase 2 (10 clinics, ~2,000 patients) | ~$2,000--$3,000 | ~$24,000--$36,000 |
+| Phase 3 (50 clinics, ~10,000 patients) | ~$5,000--$8,000 | ~$60,000--$96,000 |
+| 100 clinics, ~20,000 patients | ~$10,000--$15,000 | ~$120,000--$180,000 |
 
-**Phase 2 run rate:** ~$435,000--$517,000/year (team + infrastructure). Funded by combination of pilot clinic SaaS revenue, ACT operating capital, and seed investment.
+**Per-clinic COGS at 100 clinics: ~$100--$150/month** (vs ~$650/month for Salesforce licenses alone).
 
-### 5.3 Key Hires -- What to Look For
+### 6.4 Phase 2--3 Cost Summary
 
-**Contract Salesforce Developer (Phase 1 -- critical hire):**
-- Must have: Salesforce Health Cloud certification, Apex development, LWC, FHIR integration experience
-- Nice to have: Experience with healthcare payer/provider workflows, HIPAA compliance
-- Where to find: Salesforce Talent Alliance, Upwork (vetted Salesforce pros), Toptal, or Salesforce partner firms (10th Magnitude, Deloitte Digital -- may be too expensive)
-- Budget option: Offshore Salesforce developer ($50--$75/hr) with US-based oversight by Will
-
-**ML Engineer (Phase 1):**
-- Must have: Python, scikit-learn/XGBoost, healthcare data experience (claims data, ICD-10, HCC)
-- Nice to have: FHIR, GCP, FastAPI deployment experience
-- Budget option: VV internal resource or university partnership (Virginia Tech, UVA -- health informatics graduate students)
-
----
-
-## 6. DETAILED COST ANALYSIS
-
-### 6.1 Salesforce Licensing -- Realistic Costs
-
-**Phase 1 (MVP, 5 users, 4 months):**
-
-| Line Item | Monthly | 4-Month Total |
-|---|---|---|
-| Health Cloud Enterprise (5 users x $325) | $1,625 | $6,500 |
-| Shield encryption (~30% of license) | $488 | $1,950 |
-| Einstein/Agentforce (defer to Phase 2) | $0 | $0 |
-| MuleSoft (defer to Phase 2) | $0 | $0 |
-| **Salesforce Subtotal** | **$2,113** | **$8,450** |
-
-**Note on discounts:** Apply for the Salesforce ISV Partner Program (free to join). ISV partners receive 2 free Enterprise Edition Sales Cloud licenses (NOT Health Cloud) and a Partner Business Org for app management. These do not directly offset Health Cloud production costs but provide a free development/testing environment. Explore negotiation for a short-term pilot agreement (4--6 months rather than 12-month annual commit). Also explore the Salesforce for Startups program -- discount availability varies and is not guaranteed. Budget assumes full list price; any discount is upside.
-
-**Phase 2 (10 users, full year):**
-
-| Line Item | Monthly | Annual |
-|---|---|---|
-| Health Cloud Enterprise (10 users x $325) | $3,250 | $39,000 |
-| Shield (~30%) | $975 | $11,700 |
-| Agentforce Healthcare (10 users x $150) | $1,500 | $18,000 |
-| MuleSoft Anypoint (Integration Starter) | ~$6,700 | ~$80,000 (minimum; negotiate with Salesforce AE) |
-| **Salesforce Subtotal** | **~$12,425** | **~$148,700** |
-
-### 6.2 Infrastructure Costs
-
-**Phase 1:**
-
-| Item | Monthly | 4-Month Total |
-|---|---|---|
-| GCP Cloud Run (HIPAA BAA, model serving) | $300--$500 | $1,200--$2,000 |
-| GCP Cloud Storage (training data, backups) | $50 | $200 |
-| GitHub Team (5 users) | $20 | $80 |
-| Domain + SSL + email (Google Workspace) | $60 | $240 |
-| **Infrastructure Subtotal** | **~$530** | **~$2,120** |
-
-**Phase 2 (annual):**
-
-| Item | Annual |
-|---|---|
-| GCP (expanded: Cloud Run + BigQuery + Cloud SQL) | $12,000--$18,000 |
-| Datadog APM | $3,600 |
-| GitHub Team (10 users) | $480 |
-| Google Workspace | $720 |
-| **Infrastructure Subtotal** | **~$17,000--$23,000** |
-
-### 6.3 Total Cost Summary
-
-| Phase | Timeline | Cash Cost | In-Kind (Sweat Equity) | Total Value |
+| Phase | Timeline | Cash Cost | In-Kind | Total Value |
 |---|---|---|---|---|
-| **Phase 1 (MVP)** | Months 1--4 | $50,000 (VIPC grant) | ~$123,000 | ~$173,000 |
-| **Phase 2 (Full Product)** | Months 5--10 | ~$330,000--$430,000 | ~$150,000 | ~$480,000--$580,000 |
-| **Phase 3 (Scale)** | Months 11--18 | ~$600,000--$800,000 | ~$100,000 | ~$700,000--$900,000 |
-| **Total through Month 18** | | **~$980,000--$1,280,000** | **~$373,000** | **~$1,350,000--$1,650,000** |
+| **Phase 1 (MVP)** | Months 1--4 | $50,000 | ~$144,000 | ~$194,000 |
+| **Phase 2 (Full Product)** | Months 5--10 | ~$250,000--$350,000 | ~$150,000 | ~$400,000--$500,000 |
+| **Phase 3 (Scale)** | Months 11--18 | ~$500,000--$700,000 | ~$100,000 | ~$600,000--$800,000 |
 
 ---
 
@@ -365,126 +351,107 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 
 ### 7.1 Required Partners (Phase 1)
 
-| Partner Type | Why Needed | Candidates | Status |
+| Partner | Why Needed | Candidates | Deadline |
 |---|---|---|---|
-| **Pilot RHCs (2--3 clinics)** | Live environment to deploy, test, and demonstrate the platform. Must have Medicare patient panel, chronic disease population, and willingness to participate | Virginia RHCs -- identify through Virginia Rural Health Association or HRSA Health Center database. Target clinics using athenahealth or eCW for easier EHR integration | **Must secure by Month 1** |
-| **Salesforce Implementation Partner** | Optional but valuable -- can provide discounted licenses through partner program, development support, and AppExchange guidance | Salesforce Health Cloud partners: independent consultants (Upwork/Toptal), Salesforce Trailblazer community referrals, or local Virginia firms | Explore in Month 1 |
-| **RPM Device Vendor / Aggregator** | Device supply for pilot patients, API access for data integration, and potential reseller arrangement. **Cellular connectivity required for rural patients** | **Tenovi** (device aggregation platform, 40+ FDA-cleared devices, cellular gateway, single API); **Smart Meter** (proprietary cellular devices, zero patient setup, multi-carrier SIM); **Prevounce/Pylo** (integrated device + platform line) | **Must secure by Month 2** |
+| **Pilot RHCs (2--3 clinics)** | Live environment to deploy, test, demonstrate. Must have Medicare panel + chronic disease population | Virginia RHCs via Virginia Rural Health Association or HRSA database. Target clinics on eCW/athena/Azalea | **Month 1** |
+| **RPM Device Vendor** | Device supply for pilot patients, API access. Cellular required for rural | **Tenovi** (40+ devices, single API, cellular gateway) or **Smart Meter** (proprietary cellular, zero patient setup) | **Month 2** |
+| **HIPAA/Compliance Counsel** | BAA review, HIPAA policies, consent form templates | Healthcare IT law firm (Virginia-based) | **Month 1** |
 
 ### 7.2 Required Partners (Phase 2--3)
 
-| Partner Type | Why Needed | Candidates | Timeline |
+| Partner | Why Needed | Candidates | Timeline |
 |---|---|---|---|
-| **Clearinghouse** | Claims submission, eligibility verification, ERA/EOB processing | **Office Ally** (free for claim submission, 80K+ healthcare orgs, easiest setup) as Phase 2 first target. Availity (free for payer-sponsored eligibility checks) as secondary. Trizetto/Cognizant for advanced scrubbing in Phase 3 | Phase 2 |
-| **Billing Service / Coding Experts** | Validate coding optimization logic, provide training data for NLP model, clinical coding advisory | Local medical billing company or AAPC-certified coders | Phase 2 |
-| **HIPAA/Compliance Counsel** | BAA review, HIPAA policies, compliance attestation support | Healthcare IT law firm (Virginia-based) | Phase 1 (BAA), Phase 2 (full) |
-| **Salesforce ISV Partner** | Required for AppExchange distribution, managed package development | Self (VV registers as ISV partner -- free) | Phase 2 |
+| **Clearinghouse** | Claims submission, eligibility verification | **Office Ally** (free for claim submission, easiest setup). Availity (free for payer-sponsored eligibility) | Phase 2 |
+| **Billing/Coding Experts** | Validate coding logic, training data for NLP | Local medical billing company or AAPC-certified coders | Phase 2 |
 
 ### 7.3 Strategic Relationships
 
-| Entity | Value | Approach |
-|---|---|---|
-| **Virginia Rural Health Association** | Clinic introductions, market validation, policy advocacy | Jim/Mandy relationship-building; potential advisory board member |
-| **HRSA / Federal Office of Rural Health Policy** | Grant opportunities (HRSA has rural health IT grants), regulatory guidance, credibility | Monitor HRSA funding announcements; apply for Rural Health IT Network grant |
-| **Virginia Department of Health** | State-level rural health initiatives, Medicaid waivers, pilot endorsement | Mandy's political connections |
-| **University Partners (UVA, VT, VCU)** | Health informatics talent, clinical research collaboration, IRB for outcomes studies | Internship pipeline, joint publications, capstone project sponsorship |
+| Entity | Value |
+|---|---|
+| **Virginia Rural Health Association** | Clinic introductions, market validation, policy advocacy |
+| **HRSA / Federal Office of Rural Health Policy** | Grant opportunities, regulatory guidance, credibility |
+| **University Partners (UVA, VT, VCU)** | Health informatics talent, clinical research, IRB for outcomes studies |
 
 ---
 
-## 8. COMPLIANCE & SECURITY REQUIREMENTS
+## 8. COMPLIANCE & SECURITY
 
-### 8.1 HIPAA Compliance (Day 1 Requirements)
+### 8.1 HIPAA Compliance (Day 1)
 
 | Requirement | Implementation |
 |---|---|
-| **Business Associate Agreements (BAAs)** | Execute BAAs with: Salesforce (standard BAA available), GCP (standard BAA), any EHR vendor, any RPM device vendor, any subcontractor with PHI access. **Must be in place before any patient data enters the system** |
-| **Encryption at Rest** | Salesforce Shield Platform Encryption (AES-256, tenant-specific keys). GCP default encryption (AES-256) with customer-managed keys (CMEK) for additional control |
-| **Encryption in Transit** | TLS 1.2+ (Salesforce enforces by default). All custom API calls use HTTPS only. FHIR endpoints authenticated via OAuth 2.0 / SMART on FHIR |
-| **Access Control** | Salesforce profiles + permission sets (RBAC). Principle of least privilege. Separate profiles for: clinic admin, provider, care coordinator, VV admin |
-| **Audit Logging** | Salesforce Shield Event Monitoring (login, API, data export, record access) + Field Audit Trail for PHI fields. Shield retains real-time events for limited periods; configure Field Audit Trail for 10-year retention on PHI fields. Export event logs to external archive (GCP BigQuery or Cloud Storage) with 6-year retention to meet HIPAA documentation requirements (45 CFR 164.530(j)) |
-| **Workforce Training** | All VV and ACT team members with PHI access complete HIPAA training before pilot launch. Annual refresher. Document completion |
-| **Incident Response Plan** | Document and test PHI breach response procedure per HIPAA Breach Notification Rule (45 CFR 164.400--414). All breaches require individual notification within 60 days. Breaches affecting 500+ individuals also require HHS notification and prominent media notification within 60 days. Breaches <500 individuals: HHS notification via annual report within 60 days of calendar year end |
-| **Risk Assessment** | Complete HIPAA Security Rule risk assessment (NIST SP 800-66 methodology) before pilot launch. Document findings and remediation plan |
+| **BAAs** | Execute with: AWS (standard GovCloud BAA via AWS Artifact), RPM device vendor, EHR vendor (if applicable), any subcontractor with PHI access. **Must be in place before any patient data** |
+| **Encryption at Rest** | RDS encryption via AWS KMS (customer-managed key, AES-256). S3 SSE-KMS. Application-level field encryption for SSN, diagnosis codes, treatment notes (AES-256 via KMS envelope encryption) |
+| **Encryption in Transit** | TLS 1.2+ enforced by NGINX and ALB. All API calls HTTPS only. FHIR endpoints authenticated via OAuth 2.0 / SMART on FHIR. RDS SSL enforced (`rds.force_ssl = 1`) |
+| **Access Control** | PostgreSQL RLS for clinic isolation. Application-level RBAC: clinic admin, provider, care coordinator, VV admin. Keycloak or custom JWT auth |
+| **Audit Logging** | Three layers: (1) CloudTrail for AWS infrastructure, (2) PGAudit for database queries on PHI tables, (3) application-level `audit_trail` table (who viewed/modified which patient record, when, from where). CloudWatch Logs for real-time monitoring. Archive to S3 Glacier for 6+ year retention |
+| **Workforce Training** | All team members with PHI access complete HIPAA training before pilot. Annual refresher |
+| **Incident Response** | Documented breach response per 45 CFR 164.400--414. All breaches: individual notification within 60 days. 500+ individuals: HHS + media within 60 days. <500: HHS annual report |
+| **Risk Assessment** | HIPAA Security Rule risk assessment (NIST SP 800-66) completed before pilot launch |
 
-### 8.2 State and Federal Regulatory
+### 8.2 Regulatory
 
 | Requirement | Notes |
 |---|---|
-| **Virginia Consumer Data Protection Act (VCDPA)** | Health data exemptions exist for HIPAA-covered data, but verify applicability for any non-PHI patient data |
+| **FDA SaMD** | Risk stratification qualifies for CDS exemption under 21st Century Cures Act Section 3060(a) / FD&C Act 520(o) -- meets all four criteria. January 2026 FDA guidance broadens enforcement discretion. Maintain regulatory file documenting intended use and compliance with all four criteria |
+| **CMS Conditions of Participation** | All auto-generated billing events validated against actual clinical documentation. No false claims |
 | **42 CFR Part 2** | If any pilot clinic treats substance use disorders, additional consent and segmentation requirements apply |
-| **FDA SaMD** | Risk stratification AI that informs clinical decisions may be subject to FDA Software as a Medical Device regulation. However, if positioned as "clinical decision support" meeting all four criteria under 21st Century Cures Act Section 3060(a) / FD&C Act 520(o) -- (1) does not acquire/process medical images or signals from signal acquisition systems, (2) displays/analyzes medical information, (3) intended to support HCP recommendations, (4) enables HCP to independently review the basis for recommendations -- it qualifies for non-device exemption. The January 2026 FDA CDS guidance update takes a more expansive reading of this exemption and broadens enforcement discretion. Document intended use statement and maintain a regulatory file demonstrating compliance with all four criteria |
-| **CMS Conditions of Participation** | Any software used for billing must not create false claims. Validate all auto-generated billing events against actual clinical documentation |
+| **VCDPA** | Health data exemptions exist for HIPAA-covered data; verify for any non-PHI patient data |
 
 ---
 
 ## 9. SUCCESS METRICS
 
-### 9.1 Phase 1 Pilot KPIs (Month 4 Report)
+### 9.1 Phase 1 KPIs (Month 4 Report)
 
 | Category | Metric | Target |
 |---|---|---|
-| **Compliance** | HIPAA compliance task completion rate | >90% |
-| **Compliance** | MIPS quality measures tracked and reported | 5+ measures per clinic |
+| **Compliance** | HIPAA task completion rate | >90% |
+| **Compliance** | MIPS measures tracked | 5+ per clinic |
 | **Care** | Patients enrolled in RPM | 30+ per pilot clinic |
 | **Care** | Care gaps identified and addressed | 50+ per clinic |
-| **Care** | Risk stratification model AUC-ROC | >0.75 |
+| **Care** | Risk model AUC-ROC | >0.75 |
 | **Cost** | New RPM/CCM revenue captured per clinic (monthly) | $5,000+ |
 | **Cost** | RPM billing events auto-flagged correctly | >95% accuracy |
-| **Platform** | Clinic staff adoption (weekly active users) | >80% of licensed users |
+| **Platform** | Clinic staff adoption (weekly active users) | >80% |
 | **Platform** | System uptime | >99.5% |
+| **Platform** | New clinic onboarding time | <2 weeks |
 
-### 9.2 Metrics for Series A Pitch (Month 10)
+### 9.2 Series A Metrics (Month 10)
 
 | Metric | Target |
 |---|---|
-| Clinics live on platform | 10+ |
-| ARR (Annual Recurring Revenue) | $240,000+ ($2K/month x 10 clinics) |
+| Clinics live | 10+ |
+| ARR | $240,000+ ($2K/month x 10 clinics) |
 | Net revenue unlock per clinic | $100,000+/year |
-| Clinic retention (annual churn) | <10% |
+| Annual churn | <10% |
 | NPS (staff satisfaction) | >50 |
-| MIPS penalty avoidance demonstrated | 100% of pilot clinics |
+| MIPS penalty avoidance | 100% of pilot clinics |
 
 ---
 
 ## 10. COMPETITIVE LANDSCAPE
 
-### 10.1 Direct Competitors
+| Competitor | What They Do | Why 3C Wins |
+|---|---|---|
+| **Compliancy Group** | HIPAA compliance only | No care or billing |
+| **Optimize Health** | RPM only | No compliance or billing optimization |
+| **ThoroughCare** | CCM/RPM/TCM workflow + billing | Closest competitor -- no compliance module, no AI risk stratification, not purpose-built for RHC |
+| **ChartSpan** | Outsourced CCM services | Service, not software -- takes margin from clinic |
+| **Waystar / Availity** | Revenue cycle management | Billing only -- no clinical or compliance |
+| **TelliHealth** | End-to-end RPM (devices + platform) | 4G LTE devices, good rural fit -- RPM only |
+| **Azalea Health** | RHC-specific EHR + billing | No AI, limited RPM, no standalone compliance module |
 
-| Competitor | What They Do | Pricing | Why 3C Wins |
-|---|---|---|---|
-| **Compliancy Group (The Guard)** | HIPAA compliance tracking only | ~$300/month | Compliance only -- no care or billing |
-| **HIPAA One / Intraprise Health** | HIPAA risk assessments | ~$200--$500/month | Compliance only |
-| **Optimize Health** | RPM platform only | $6--$12/patient/month | Care/RPM only -- no compliance or billing optimization |
-| **Rimidi** | Chronic disease management + RPM | Custom pricing | Care only -- no compliance or billing |
-| **ThoroughCare** | CCM/RPM/TCM/AWV workflow + billing | ~$3--$8/patient/month | Closest competitor -- but no compliance module, no AI risk stratification, not Salesforce-native |
-| **ChartSpan** | Outsourced CCM services | Revenue share model | Service, not software -- takes margin from clinic |
-| **Waystar / Availity** | Revenue cycle management | $500--$2,000/month | Billing only -- no clinical or compliance |
-| **athenahealth RCM** | EHR + built-in billing | Bundled with EHR | General-purpose -- not optimized for RHC-specific programs (RPM/CCM/MIPS) |
-| **TelliHealth** | End-to-end RPM (devices + platform + monitoring) | Per patient/month | 4G LTE devices, good rural fit -- but RPM only, no compliance or billing optimization |
-| **HealthSnap** | RPM with clinical monitoring | Per patient/month | Strong outcomes data -- but RPM only |
-| **Azalea Health** | RHC-specific EHR + billing | Bundled | Closest RHC-specific competitor -- but no AI, limited RPM, no standalone compliance module |
+**Competitive moat:**
+1. **Unified platform** -- no competitor offers compliance + care + revenue on one platform
+2. **RHC-specific** -- purpose-built for rural clinic workflows, not a hospital product scaled down
+3. **93--95% gross margins** -- custom stack eliminates enterprise licensing costs
+4. **VV defense pedigree** -- GovCloud infrastructure, security-first architecture, classified deployment experience
+5. **Virginia-first** -- local relationships, VIPC backing, state policy alignment
 
-### 10.2 Pricing Strategy
+**Pricing:** $500--$4,000/month per clinic (3 tiers). At the $2,000/month entry tier, platform unlocks $195K--$267K/year in new revenue -- **8--11x return on subscription cost.**
 
-**Target RHC IT budget reality:** 81% of rural providers cite budget constraints as the biggest obstacle to new technology (Black Book Research, 2025). A typical 3-provider RHC spends $34,000--$95,000/year on all IT. Our pricing must land in a range that fits within existing budgets while being justified by revenue unlock.
-
-| Tier | Monthly Price | Includes | Target Clinic |
-|---|---|---|---|
-| **Starter** (Compliance + Basic Care) | $500/month | HIPAA compliance tracker, care gap detection, basic MIPS dashboard, 50 patients | Small RHC, 1--2 providers |
-| **Professional** (Full 3C) | $2,000/month | All three modules, RPM integration, AI risk stratification, up to 200 patients | Mid-size RHC, 3--5 providers |
-| **Enterprise** | $4,000/month | Full 3C + NLP coding optimization, unlimited patients, dedicated support | Large RHC or multi-site |
-
-**Revenue justification:** At $2,000/month ($24,000/year), the platform unlocks $195,000--$267,000/year in new RPM/CCM/MIPS revenue. That's an **8--11x ROI**. The platform sells itself on the math.
-
-**Key funding tailwind:** The **Rural Health Transformation (RHT) Program** allocates **$50 billion over 5 years** to states, with permissible uses including software, hardware, cybersecurity, remote monitoring, and AI. Position the 3C Platform as eligible technology spend under this program -- clinics may be able to fund their subscription through RHT grants.
-
-### 10.3 Competitive Moat
-
-1. **Unified platform:** No competitor offers compliance + care + revenue on one platform. Clinics currently buy 3--5 separate tools that don't talk to each other
-2. **RHC-specific:** Purpose-built for the regulatory, clinical, and financial realities of Rural Health Clinics -- not a hospital product scaled down
-3. **Salesforce ecosystem:** Builds on enterprise infrastructure that scales; avoids the "small vendor" risk that RHCs worry about
-4. **AI-first revenue optimization:** The AI doesn't just track -- it finds money. Risk stratification identifies patients who need (and qualify for) RPM/CCM. NLP finds missed codes. MIPS projection prevents penalties. The platform literally pays for itself
-5. **Virginia-first strategy:** Deep local relationships, VIPC backing, state policy alignment -- hard for national competitors to replicate
+**Funding tailwind:** $50B Rural Health Transformation (RHT) Program allocates funding to states for healthcare technology. Position 3C as eligible technology spend.
 
 ---
 
@@ -492,15 +459,14 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 
 | Risk | Severity | Likelihood | Mitigation |
 |---|---|---|---|
-| **Salesforce costs exceed budget** | HIGH | MEDIUM | Apply for ISV Partner Program and Startup Program discounts immediately. Negotiate multi-year commit. Phase 1 uses minimal user count (5). If costs still prohibitive, evaluate Salesforce Platform (cheaper) instead of Health Cloud |
-| **Pilot clinic EHR integration harder than expected** | HIGH | MEDIUM | Start with manual data import (CSV) as fallback. Prioritize EHRs with strong FHIR support (athenahealth, eCW). Budget 2 extra weeks for integration troubleshooting |
-| **Clinic staff adoption resistance** | HIGH | MEDIUM | Involve clinic staff in design from Sprint 1. Keep UI simple (max 3 clicks to any action). Provide on-site training. Show revenue impact early to build buy-in |
-| **RPM patient enrollment lower than expected** | MEDIUM | HIGH | Offer device-included model (clinic provides devices to patients at no cost -- devices paid by VIPC grant). Start with highest-risk patients who benefit most. Have clinic champion (MA or nurse) lead enrollment |
-| **ML model performance below threshold** | MEDIUM | LOW | Fall back to rule-based risk scoring (validated clinical risk scores like LACE index). ML model is enhancement, not dependency |
-| **HIPAA breach during pilot** | HIGH | LOW | Shield encryption from Day 1. BAAs with all vendors. Minimize PHI in development/testing environments (use synthetic data). Incident response plan documented before pilot launch |
-| **FDA classifies risk model as SaMD** | MEDIUM | LOW | Position as clinical decision support (provider reviews and acts on all outputs). Document intended use per 21st Century Cures Act exemption criteria. Consult regulatory counsel if needed |
-| **Salesforce platform changes/price increases** | MEDIUM | MEDIUM | Build with standard Salesforce APIs and metadata (avoid deep platform coupling). Maintain architecture flexibility for future platform migration if needed |
-| **Contract developer unavailable or underperforms** | HIGH | MEDIUM | Begin recruiting immediately upon grant award. Have backup candidates identified. Will can cover gap temporarily for simpler configuration work |
+| **Pilot clinic EHR integration harder than expected** | HIGH | MEDIUM | Start with CSV import as fallback. Prioritize EHRs with strong FHIR (eCW, athena). Budget extra time. bonFHIR community provides support |
+| **Clinic staff adoption resistance** | HIGH | MEDIUM | Involve staff in Sprint 1 design. Keep UI simple (max 3 clicks). On-site training. Show revenue impact early |
+| **RPM patient enrollment low** | MEDIUM | HIGH | Provide devices at no cost (grant-funded). Start with highest-risk patients. Clinic champion (MA/nurse) leads enrollment |
+| **ML model underperforms** | MEDIUM | LOW | Fall back to validated clinical risk scores (LACE index). ML is enhancement, not dependency |
+| **HIPAA breach during pilot** | HIGH | LOW | KMS encryption from Day 1. BAAs with all vendors. Synthetic data for dev/test. Incident response plan before pilot |
+| **n8n Community Edition throughput limit** | LOW | LOW | 23 req/s single mode is 10x our Phase 1 load. Upgrade to Enterprise queue mode in Phase 2 if needed |
+| **EHR vendor blocks API access** | MEDIUM | LOW | Apply for developer program early. Backup: CSV/manual import. Multiple pilot clinics reduces single-EHR dependency |
+| **AWS GovCloud cost overrun** | LOW | LOW | $34K contingency. GovCloud pricing is well-documented. Set billing alerts at $1K/month |
 
 ---
 
@@ -508,18 +474,16 @@ Assume a pilot clinic with 800 Medicare patients, 25% chronic disease prevalence
 
 | Action | Owner | Deadline | Dependency |
 |---|---|---|---|
-| Register as Salesforce ISV Partner | Will | Week 1 | None |
-| Apply for Salesforce Startup Program discount | Will | Week 1 | None |
-| Provision Salesforce Health Cloud dev environment | Will | Week 1 | ISV registration |
-| Execute GCP BAA for HIPAA workloads | Will | Week 1 | None |
-| Post contract Salesforce developer job listing | Will + Jim | Week 1 | None |
-| Identify and contact 5--10 candidate pilot RHCs in Virginia | Jim + Mandy | Week 1--2 | None |
-| Execute HIPAA BAA with Salesforce | Will | Week 1 | SF provisioning |
-| Reach out to RPM device vendors (Tenovi, Smart Meter) for partnership; request API documentation and pilot pricing | Will + Jim | Week 2 | None |
+| Provision AWS GovCloud environment (ECS, RDS, S3, KMS) | Will | Week 1 | None |
+| Execute AWS GovCloud BAA | Will | Week 1 | None |
+| Deploy n8n + PostgreSQL + NGINX containers on Fargate | Will | Week 1 | GovCloud provisioned |
+| Apply for EHR developer program (eCW / athena / Azalea) | Will | Week 1 | None |
+| Identify and contact 5--10 candidate pilot RHCs | Jim + Mandy | Week 1--2 | None |
+| Engage HIPAA compliance counsel | Will + Cari Ann | Week 1 | None |
 | Complete HIPAA Security Rule risk assessment | Will + Cari Ann | Week 2--3 | None |
-| Apply for EHR developer program access (athenahealth / eCW / Azalea Health based on pilot clinic EHR) | Will | Week 1--2 | Pilot clinic identified |
-| Select and onboard pilot clinic (first) | Jim | Week 3--4 | Clinic outreach |
-| Begin Sprint 1 development | Will + Contract Dev | Week 2 | SF environment ready |
+| Reach out to RPM device vendors (Tenovi, Smart Meter) -- API docs + pilot pricing | Will + Jim | Week 2 | None |
+| Select and onboard first pilot clinic | Jim | Week 3--4 | Clinic outreach |
+| Begin Sprint 1 development (database schema, React scaffold, auth) | Will | Week 1 | GovCloud ready |
 | Contact Virginia Rural Health Association for introductions | Jim + Mandy | Week 2 | None |
 
 ---
