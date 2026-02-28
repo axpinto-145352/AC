@@ -183,7 +183,7 @@ RPM allows clinics to bill Medicare for monitoring patients with chronic conditi
 | **3. Clinician Review (First 20 min)** | 99457 | Interactive communication with patient about RPM data | ~$52/month | 20+ minutes of clinician time reviewing data and communicating with patient |
 | **4. Clinician Review (Additional 20 min)** | 99458 | Additional interactive communication beyond first 20 min | ~$42/month | Each additional 20-minute block |
 
-**Per-patient RPM revenue potential:** ~$120--$210/month (depending on clinician time billed)
+**Per-patient RPM revenue potential:** ~$104--$187/month (99454 + 99457 base at ~$104; up to ~$187 with two additional 99458 clinician time blocks)
 
 **New for 2026:** CPT 99445 allows billing for 2--15 days of device data transmission (~$52), enabling clinics to capture revenue even when patients don't meet the 16-day threshold for 99454. CPT 99470 covers 10--19 minutes of clinician interactive time (~$26), bridging the gap for patients who don't reach the full 20-minute threshold for 99457. These codes are mutually exclusive with 99454 and 99457 respectively -- bill one or the other per 30-day period.
 
@@ -198,7 +198,7 @@ CCM allows clinics to bill Medicare for non-face-to-face care coordination for p
 | **3. Complex CCM** | 99487 | First 60 minutes for patients with complex needs | ~$144/month | 60+ minutes of staff time; substantial care plan revision or coordination complexity |
 | **4. Complex CCM Additional** | 99489 | Each additional 30 minutes (complex) | ~$78/month | Each additional 30-minute block beyond 99487 |
 
-**Per-patient CCM revenue potential:** ~$62--$131/month (standard CCM with additional time blocks)
+**Per-patient CCM revenue potential:** ~$66--$167/month (99490 base at ~$66; up to ~$167 with two additional 99439 time blocks)
 
 #### How a Clinic Gets Started with CMS Reimbursement
 
