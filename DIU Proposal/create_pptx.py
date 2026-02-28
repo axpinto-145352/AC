@@ -1085,7 +1085,7 @@ add_textbox(slide, Inches(0), Inches(7.15), SLIDE_W, Inches(0.35),
 # ===========================================================================
 # Save
 # ===========================================================================
-output_path = "/home/user/AC-DIU-proposal/03_Solution_Brief.pptx"
+output_path = "/home/user/AC/DIU Proposal/03_Solution_Brief.pptx"
 prs.save(output_path)
 print(f"Solution brief saved to: {output_path}")
 print(f"Total slides: {len(prs.slides)}")
