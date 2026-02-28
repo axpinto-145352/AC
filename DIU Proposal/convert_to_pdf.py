@@ -167,7 +167,7 @@ docs = [
     ("04_White_Paper.md", "04_White_Paper.pdf"),
 ]
 
-base = "/home/user/AC-DIU-proposal"
+base = "/home/user/AC/DIU Proposal"
 for md_file, pdf_file in docs:
     md_path = os.path.join(base, md_file)
     pdf_path = os.path.join(base, pdf_file)
