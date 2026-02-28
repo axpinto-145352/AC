@@ -164,15 +164,15 @@ Not every clinic needs every module. The 3C Platform is architected as **indepen
 
 ---
 
-## 3.4 CMS Reimbursement Opportunity: A Guide for Potential Clients
+### 3.4 CMS Reimbursement Opportunity: A Guide for Potential Clients
 
 **The core message for clinics:** CMS already pays for Remote Patient Monitoring (RPM) and Chronic Care Management (CCM). These are established Medicare reimbursement programs -- not pilot programs, not grants, not experimental. The challenge is that most rural clinics lack the technology and workflow infrastructure to capture this revenue. The 3C Platform solves that.
 
-### Why CMS Reimbursement Matters for Rural Clinics
+#### Why CMS Reimbursement Matters for Rural Clinics
 
 Rural Health Clinics operate on thin margins, with Medicare/Medicaid comprising 60--80% of their revenue. CMS has created RPM and CCM billing codes specifically to incentivize preventive, technology-enabled care for patients with chronic conditions. These programs represent a direct, recurring revenue stream that most RHCs are not capturing because they don't have the systems to track billing thresholds, document clinician time, or manage patient enrollment at scale.
 
-### RPM Reimbursement Pathway (Remote Patient Monitoring)
+#### RPM Reimbursement Pathway (Remote Patient Monitoring)
 
 RPM allows clinics to bill Medicare for monitoring patients with chronic conditions using FDA-cleared connected devices (blood pressure cuffs, glucose monitors, pulse oximeters, scales). The reimbursement structure:
 
@@ -187,7 +187,7 @@ RPM allows clinics to bill Medicare for monitoring patients with chronic conditi
 
 **New for 2026:** CPT 99445 allows billing for 2--15 days of device data transmission (~$52), enabling clinics to capture revenue even when patients don't meet the 16-day threshold for 99454. CPT 99470 covers 10--19 minutes of clinician interactive time (~$26), bridging the gap for patients who don't reach the full 20-minute threshold for 99457. These codes are mutually exclusive with 99454 and 99457 respectively -- bill one or the other per 30-day period.
 
-### CCM Reimbursement Pathway (Chronic Care Management)
+#### CCM Reimbursement Pathway (Chronic Care Management)
 
 CCM allows clinics to bill Medicare for non-face-to-face care coordination for patients with 2+ chronic conditions. Unlike RPM, CCM does not require devices -- it covers care planning, medication management, and coordination:
 
@@ -200,7 +200,7 @@ CCM allows clinics to bill Medicare for non-face-to-face care coordination for p
 
 **Per-patient CCM revenue potential:** ~$62--$131/month (standard CCM with additional time blocks)
 
-### How a Clinic Gets Started with CMS Reimbursement
+#### How a Clinic Gets Started with CMS Reimbursement
 
 For potential clients evaluating the CMS reimbursement route, here is the practical pathway:
 
@@ -237,7 +237,7 @@ For potential clients evaluating the CMS reimbursement route, here is the practi
 - Phase 2 of the 3C Platform adds direct clearinghouse integration (Office Ally) for automated claims submission
 - All billing events are validated against CMS rules before submission to prevent denials
 
-### What the 3C Platform Automates
+#### What the 3C Platform Automates
 
 | Manual Process (Without 3C) | Automated Process (With 3C) |
 |---|---|
@@ -248,7 +248,7 @@ For potential clients evaluating the CMS reimbursement route, here is the practi
 | Claims submitted without pre-validation -- denials caught after the fact | Rules engine validates billing events against CMS requirements before claim generation |
 | MIPS quality measures tracked manually or ignored | Real-time MIPS dashboard with payment adjustment projections |
 
-### Key Compliance Guardrails
+#### Key Compliance Guardrails
 
 CMS reimbursement programs have strict requirements. The 3C Platform enforces these programmatically:
 
@@ -258,7 +258,7 @@ CMS reimbursement programs have strict requirements. The 3C Platform enforces th
 - **Documentation linkage:** Every billing event is linked to the underlying device data, clinician notes, or care coordination activity that supports it
 - **Audit trail:** Complete record of what was billed, when, based on what data, and who approved it
 
-### Transitional Care Management (TCM) -- Additional Opportunity
+#### Transitional Care Management (TCM) -- Additional Opportunity
 
 Beyond RPM and CCM, clinics can also capture Transitional Care Management reimbursement for patients discharged from inpatient facilities:
 
@@ -269,7 +269,7 @@ Beyond RPM and CCM, clinics can also capture Transitional Care Management reimbu
 
 The 3C Platform (Phase 2) integrates with hospital ADT feeds to automatically trigger TCM workflows when a clinic's patient is discharged, ensuring the 2-day contact window is never missed.
 
-### The Bottom Line for Clients
+#### The Bottom Line for Clients
 
 CMS reimbursement through RPM, CCM, and TCM is not speculative revenue -- it is established Medicare billing that clinics are entitled to capture today. The barrier is operational: tracking thresholds, documenting time, managing consent, and submitting compliant claims at scale. The 3C Platform removes that barrier by automating the entire workflow from device data ingestion through billable event generation. Clinics that adopt RPM and CCM programs can generate significant new recurring revenue while simultaneously improving patient outcomes through continuous monitoring and proactive care management.
 
